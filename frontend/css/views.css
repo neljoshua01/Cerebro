@@ -1,0 +1,15 @@
+/* View-specific overrides stay here so the core visual system remains easy to scan. */
+[data-view="overview"] .panel-card,[data-view="youtube"] .panel-card{min-height:0}
+[data-view="job-detail"] #jobTabContent>.panel-card{animation:fade-in .12s ease}
+@keyframes fade-in{from{opacity:.35;transform:translateY(2px)}to{opacity:1;transform:none}}
+
+/* degraded health items get a slow amber pulse instead of a flat static dot */
+.health-item .warning-dot{animation:status-pulse 2.2s infinite}
+
+/* command bar gets a faint scanning highlight while focused, reinforcing the console feel */
+.command-bar:focus-within::after{
+  content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--signal),transparent);
+  animation:scan 1.6s ease-in-out infinite;
+}
+@keyframes scan{0%{opacity:0;transform:translateX(-30%)}50%{opacity:.8}100%{opacity:0;transform:translateX(30%)}}

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Cerebro — Human Control Surface</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/views.css">
+  <script src="js/api.js" defer></script>
+  <script src="js/state.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="icon-button mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation">☰</button>
+      <a class="brand" href="#/overview" aria-label="Cerebro home">
+        <span class="brand-mark"></span>
+        <span>CEREBRO</span>
+      </a>
+
+      <form class="command-bar" id="commandForm">
+        <span class="command-prefix">›</span>
+        <input id="commandInput" autocomplete="off" placeholder="Ask Cerebro, create a job, inspect a project…">
+        <button type="button" class="voice-button" id="voiceButton" aria-label="Voice input">◉</button>
+        <kbd>⌘ K</kbd>
+      </form>
+
+      <div class="topbar-status">
+        <span class="system-pill"><span class="dot online"></span>Core online</span>
+        <button class="profile-button" aria-label="Engineer menu">NJ</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" id="sidebar">
+      <nav class="nav" aria-label="Primary">
+        <a class="nav-item active" href="#/overview" data-route="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg><span>Overview</span></a>
+
+        <div class="nav-group">
+          <div class="nav-label">Work</div>
+          <a class="nav-item" href="#/jobs" data-route="jobs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg><span>Jobs</span><span class="nav-count">3</span></a>
+          <a class="nav-item" href="#/approvals" data-route="approvals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg><span>Approvals</span><span class="nav-count warning">2</span></a>
+          <a class="nav-item" href="#/activity" data-route="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg><span>Activity</span></a>
+        </div>
+
+        <a class="nav-item nav-standalone" href="#/projects" data-route="projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7l3-3h5l2 2h8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg><span>Projects</span></a>
+
+        <div class="nav-group">
+          <div class="nav-label">Intelligence</div>
+          <a class="nav-item" href="#/agents" data-route="agents"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h.01M15 9h.01M9 15c1 1 5 1 6 0"/></svg><span>Agents</span></a>
+          <a class="nav-item" href="#/memory" data-route="memory"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3a5 5 0 0 1 5 5c0 1.7-.8 2.7-1.6 3.6-.6.7-1.1 1.3-1.2 2.2v1H9.8v-1c-.1-.9-.6-1.5-1.2-2.2C7.8 10.7 7 9.7 7 8a5 5 0 0 1 5-5z"/><path d="M9.5 20h5"/></svg><span>Memory</span></a>
+          <a class="nav-item" href="#/experience" data-route="experience"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="3"/></svg><span>Experience</span></a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">System</div>
+          <a class="nav-item" href="#/tools" data-route="tools"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a4 4 0 0 0-5.6 5.6L3 18l3 3 6.1-6.1a4 4 0 0 0 5.6-5.6l-2.5 2.5-2-2 2.5-2.5z"/></svg><span>Tools</span></a>
+          <a class="nav-item" href="#/providers" data-route="providers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg><span>Providers</span></a>
+          <a class="nav-item" href="#/health" data-route="health"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2-8 4 16 2-8h6"/></svg><span>Health</span></a>
+          <a class="nav-item" href="#/logs" data-route="logs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Logs</span></a>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">Applications</div>
+          <a class="nav-item" href="#/youtube" data-route="youtube"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="3"/><path d="M10.5 9.5l5 2.5-5 2.5z" fill="currentColor" stroke="none"/></svg><span>YouTube</span></a>
+        </div>
+
+        <a class="nav-item nav-standalone" href="#/settings" data-route="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings</span></a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="mode-card">
+          <span class="eyebrow">Autonomy</span>
+          <strong>Suggest → Approve → Execute</strong>
+          <span>Human authority preserved</span>
+        </div>
+        <span class="build">Cerebro UI · static client</span>
+      </div>
+    </aside>
+
+    <main class="workspace" id="workspace">
+      <section class="view active" data-view="overview">
+        <div class="page-header">
+          <div>
+            <span class="eyebrow">Control surface</span>
+            <h1>Overview</h1>
+            <p>See what Cerebro is doing, what needs your decision, and whether the system is healthy.</p>
+          </div>
+          <button class="button primary" data-action="new-job">+ New job</button>
+        </div>
+
+        <div class="metric-grid">
+          <article class="metric-card"><span>Active jobs</span><strong>3</strong><small>1 executing · 2 waiting</small></article>
+          <article class="metric-card"><span>Approvals</span><strong>2</strong><small>Engineer decision required</small></article>
+          <article class="metric-card"><span>Core health</span><strong class="good">Healthy</strong><small>8/8 critical services available</small></article>
+          <article class="metric-card"><span>Tool policy</span><strong>Bounded</strong><small>Destructive actions require approval</small></article>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="panel-card span-2">
+            <div class="card-header"><div><span class="eyebrow">Current work</span><h2>Jobs</h2></div><a href="#/jobs">View all</a></div>
+            <div class="job-list compact">
+              <button class="job-row" data-open-job="JOB-00124">
+                <span class="job-id">JOB-00124</span><span><strong>Fix checkout trigger</strong><small>Shopee Tracker · Software Engineering</small></span><span class="status amber">Awaiting approval</span>
+              </button>
+              <button class="job-row" data-open-job="JOB-00131">
+                <span class="job-id">JOB-00131</span><span><strong>Produce episode 014</strong><small>Faceless YouTube · Production</small></span><span class="status blue">Executing</span>
+              </button>
+              <button class="job-row" data-open-job="JOB-00119">
+                <span class="job-id">JOB-00119</span><span><strong>Refactor browser session manager</strong><small>Shopee Tracker · Engineering</small></span><span class="status green">Completed</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="panel-card">
+            <div class="card-header"><div><span class="eyebrow">Needs you</span><h2>Approvals</h2></div></div>
+            <div class="stack-list">
+              <div class="decision-item"><strong>Apply checkout patch</strong><span>JOB-00124 · code change</span><button class="text-button" data-route-link="approvals">Review</button></div>
+              <div class="decision-item"><strong>Publish episode 014</strong><span>JOB-00131 · external action</span><button class="text-button" data-route-link="approvals">Review</button></div>
+            </div>
+          </section>
+
+          <section class="panel-card span-2">
+            <div class="card-header"><div><span class="eyebrow">Live</span><h2>Execution stream</h2></div><span class="live-indicator"><span class="dot online"></span>WebSocket ready</span></div>
+            <div class="event-stream" id="overviewEventStream">
+              <div><time>12:42:10</time><span class="event-type plan">PLAN</span><span>JOB-00131 storyboard approved; assembly task started.</span></div>
+              <div><time>12:42:14</time><span class="event-type tool">TOOL</span><span>FFmpeg assembly command prepared inside media workspace.</span></div>
+              <div><time>12:42:18</time><span class="event-type memory">MEM</span><span>Reused prior caption-safe-area experience from episode 012.</span></div>
+            </div>
+          </section>
+
+          <section class="panel-card">
+            <div class="card-header"><div><span class="eyebrow">Architecture rule</span><h2>Thin client</h2></div></div>
+            <div class="architecture-mini">
+              <div><strong>HTML + CSS + JS</strong><span>render, interact, communicate</span></div>
+              <b>⇅</b>
+              <div><strong>Python API</strong><span>authority, intelligence, execution</span></div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" data-view="jobs">
+        <div class="page-header"><div><span class="eyebrow">Work</span><h1>Jobs</h1><p>Universal units of work across engineering and applications.</p></div><button class="button primary" data-action="new-job">+ New job</button></div>
+        <div class="toolbar"><input class="search-input" placeholder="Filter jobs…"><select><option>All statuses</option><option>Executing</option><option>Awaiting approval</option><option>Completed</option></select><select><option>All types</option><option>Software Engineering</option><option>YouTube Production</option></select></div>
+        <section class="panel-card table-card">
+          <div class="table-row table-head"><span>Job</span><span>Objective</span><span>Project</span><span>Status</span><span>Updated</span></div>
+          <button class="table-row" data-open-job="JOB-00124"><span class="mono">JOB-00124</span><span>Fix checkout trigger</span><span>Shopee Tracker</span><span><i class="status amber">Awaiting approval</i></span><span>2m ago</span></button>
+          <button class="table-row" data-open-job="JOB-00131"><span class="mono">JOB-00131</span><span>Produce episode 014</span><span>Faceless YouTube</span><span><i class="status blue">Executing</i></span><span>now</span></button>
+          <button class="table-row" data-open-job="JOB-00119"><span class="mono">JOB-00119</span><span>Refactor browser session manager</span><span>Shopee Tracker</span><span><i class="status green">Completed</i></span><span>1d ago</span></button>
+        </section>
+      </section>
+
+      <section class="view" data-view="job-detail">
+        <div class="page-header job-detail-header"><div><button class="back-link" data-route-link="jobs">← Jobs</button><span class="eyebrow" id="jobDetailId">JOB-00124</span><h1 id="jobDetailTitle">Fix checkout trigger</h1><p id="jobDetailMeta">Shopee Tracker · Software Engineering</p></div><span class="status amber" id="jobDetailStatus">Awaiting approval</span></div>
+        <nav class="subnav" id="jobSubnav">
+          <button class="active" data-job-tab="summary">Overview</button><button data-job-tab="requirements">Requirements</button><button data-job-tab="context">Context</button><button data-job-tab="plan">Plan</button><button data-job-tab="tasks">Tasks</button><button data-job-tab="agents">Agents</button><button data-job-tab="tools">Tools</button><button data-job-tab="execution">Execution</button><button data-job-tab="changes">Changes</button><button data-job-tab="tests">Tests</button><button data-job-tab="qa">QA</button><button data-job-tab="artifacts">Artifacts</button><button data-job-tab="approvals">Approvals</button><button data-job-tab="trace">Trace</button><button data-job-tab="experience">Experience</button>
+        </nav>
+        <div id="jobTabContent"></div>
+      </section>
+
+      <section class="view" data-view="approvals"><div class="page-header"><div><span class="eyebrow">Work</span><h1>Approvals</h1><p>Explicit human gates before consequential actions.</p></div></div><div class="approval-grid"><article class="approval-card"><span class="status amber">Code change</span><h2>Apply checkout trigger patch</h2><p>Cerebro proposes replacing the stale page reference with a session-aware accessor and adding a regression test.</p><dl><div><dt>Job</dt><dd>JOB-00124</dd></div><div><dt>Risk</dt><dd>Low · isolated module</dd></div><div><dt>Evidence</dt><dd>3 failing reproductions, 2 passing targeted tests after patch</dd></div></dl><div class="approval-actions"><button class="button primary" data-action="approve">Approve</button><button class="button">Reject</button></div></article><article class="approval-card"><span class="status violet">External action</span><h2>Publish episode 014</h2><p>Final upload metadata and video package passed QA. Publishing remains a hard approval gate.</p><dl><div><dt>Job</dt><dd>JOB-00131</dd></div><div><dt>Channel</dt><dd>Faceless YouTube</dd></div><div><dt>QA</dt><dd>6/6 checks passed</dd></div></dl><div class="approval-actions"><button class="button primary" data-action="approve">Approve publish</button><button class="button">Reject</button></div></article></div></section>
+
+      <section class="view" data-view="activity"><div class="page-header"><div><span class="eyebrow">Work</span><h1>Activity</h1><p>A human-readable stream of important state changes.</p></div></div><section class="panel-card"><div class="event-stream tall"><div><time>12:42:18</time><span class="event-type memory">MEM</span><span>Experience EX-0047 retrieved for caption safe area.</span></div><div><time>12:42:14</time><span class="event-type tool">TOOL</span><span>FFmpeg command prepared; execution policy allowed inside project workspace.</span></div><div><time>12:41:57</time><span class="event-type approval">GATE</span><span>JOB-00124 implementation blocked pending engineer approval.</span></div><div><time>12:41:42</time><span class="event-type plan">PLAN</span><span>Strategy B selected after comparing three repair approaches.</span></div></div></section></section>
+
+      <section class="view" data-view="projects"><div class="page-header"><div><span class="eyebrow">Context</span><h1>Projects</h1><p>Persistent project understanding owned by the Python backend.</p></div></div><div class="card-grid"><article class="project-card"><div><span class="status green">Active</span><h2>Shopee Tracker</h2><p>Python · Playwright · Git</p></div><div class="project-facts"><span>247 files</span><span>38 tests</span><span>2 open jobs</span></div><button class="button">Open context</button></article><article class="project-card"><div><span class="status blue">Active</span><h2>Faceless YouTube</h2><p>Content production application on Cerebro Core</p></div><div class="project-facts"><span>Episode 014</span><span>6 QA checks</span><span>1 approval</span></div><button class="button" data-route-link="youtube">Open application</button></article></div></section>
+
+      <section class="view" data-view="agents"><div class="page-header"><div><span class="eyebrow">Intelligence</span><h1>Agents</h1><p>Specialized roles coordinated by Cerebro, not independent authorities.</p></div></div><div class="card-grid four"><article class="mini-card"><span class="status blue">Working</span><h3>Planning Agent</h3><p>Builds task graphs and compares strategies.</p></article><article class="mini-card"><span class="status green">Ready</span><h3>Coding Agent</h3><p>Creates bounded code changes after approval.</p></article><article class="mini-card"><span class="status green">Ready</span><h3>Testing Agent</h3><p>Runs targeted and regression verification.</p></article><article class="mini-card"><span class="status green">Ready</span><h3>Research Agent</h3><p>Collects evidence and documentation when required.</p></article></div></section>
+
+      <section class="view" data-view="memory"><div class="page-header"><div><span class="eyebrow">Intelligence</span><h1>Memory</h1><p>Project facts, engineering knowledge, and collaboration context.</p></div></div><div class="dashboard-grid"><section class="panel-card"><h2>Project memory</h2><p class="muted">Architecture, decisions, dependencies, conventions, known issues.</p><div class="memory-record"><strong>Shopee Tracker</strong><span>Browser sessions are persistent and must be reacquired after reconnect.</span></div></section><section class="panel-card"><h2>Engineering memory</h2><p class="muted">Reusable technical knowledge grounded in prior work.</p><div class="memory-record"><strong>Playwright</strong><span>Page handles can become stale across persistent context reconnects.</span></div></section><section class="panel-card"><h2>Collaboration profile</h2><p class="muted">How Cerebro should work with the Engineer.</p><div class="memory-record"><strong>Control preference</strong><span>Explain consequential changes and preserve explicit approval gates.</span></div></section></div></section>
+
+      <section class="view" data-view="experience"><div class="page-header"><div><span class="eyebrow">Intelligence</span><h1>Experience</h1><p>Outcomes that Cerebro can retrieve and reuse during future work.</p></div></div><section class="panel-card table-card"><div class="table-row exp-head"><span>Experience</span><span>Outcome</span><span>Reusable lesson</span><span>Used</span></div><div class="table-row exp-head"><span class="mono">EX-0047</span><span><i class="status green">Success</i></span><span>Keep captions inside 90% title-safe region.</span><span>3×</span></div><div class="table-row exp-head"><span class="mono">EX-0032</span><span><i class="status red">Failed</i></span><span>Do not cache Playwright Page across browser reconnection.</span><span>2×</span></div></section></section>
+
+      <section class="view" data-view="tools"><div class="page-header"><div><span class="eyebrow">System</span><h1>Tools</h1><p>Capabilities exposed to Cerebro through bounded permission policies.</p></div></div><section class="panel-card table-card"><div class="table-row tool-head"><span>Tool</span><span>Read</span><span>Write</span><span>Network</span><span>Destructive</span><span>Status</span></div><div class="table-row tool-head"><span>Filesystem</span><span>Project scope</span><span>Project scope</span><span>—</span><span>Approval</span><span><i class="status green">Ready</i></span></div><div class="table-row tool-head"><span>Terminal</span><span>—</span><span>Sandbox</span><span>Restricted</span><span>Blocked</span><span><i class="status green">Ready</i></span></div><div class="table-row tool-head"><span>Git</span><span>Repository</span><span>Branch</span><span>Remote by policy</span><span>Approval</span><span><i class="status green">Ready</i></span></div><div class="table-row tool-head"><span>Browser</span><span>Allowed sites</span><span>Session</span><span>Allowed</span><span>—</span><span><i class="status green">Ready</i></span></div></section></section>
+
+      <section class="view" data-view="providers"><div class="page-header"><div><span class="eyebrow">System</span><h1>Providers</h1><p>Replaceable intelligence and service providers behind stable Cerebro contracts.</p></div></div><div class="card-grid"><article class="mini-card"><span class="status green">Primary</span><h3>LLM Provider A</h3><p>Reasoning · coding · structured output</p><small>Healthy · 820 ms median</small></article><article class="mini-card"><span class="status grey">Fallback</span><h3>LLM Provider B</h3><p>General reasoning fallback</p><small>Healthy · standby</small></article><article class="mini-card"><span class="status green">Connected</span><h3>Voice Provider</h3><p>Speech recognition and synthesis abstraction</p><small>Healthy</small></article></div></section>
+
+      <section class="view" data-view="health"><div class="page-header"><div><span class="eyebrow">System</span><h1>Health</h1><p>Reliability indicators for critical Cerebro subsystems.</p></div></div><div class="health-grid"><div class="health-item"><span><span class="dot online"></span>Cerebro Core</span><strong>Healthy</strong></div><div class="health-item"><span><span class="dot online"></span>Job Engine</span><strong>Healthy</strong></div><div class="health-item"><span><span class="dot online"></span>Tool Manager</span><strong>Healthy</strong></div><div class="health-item"><span><span class="dot online"></span>Memory</span><strong>Healthy</strong></div><div class="health-item"><span><span class="dot online"></span>Provider Gateway</span><strong>Healthy</strong></div><div class="health-item"><span><span class="dot online"></span>Filesystem</span><strong>Healthy</strong></div><div class="health-item"><span><span class="dot online"></span>Git</span><strong>Healthy</strong></div><div class="health-item"><span><span class="dot warning-dot"></span>YouTube API</span><strong>Degraded</strong></div></div></section>
+
+      <section class="view" data-view="logs"><div class="page-header"><div><span class="eyebrow">System</span><h1>Logs</h1><p>Raw diagnostic output. Important events should also appear in Activity and Trace.</p></div></div><section class="terminal-card"><div class="terminal-toolbar"><span>cerebro.log</span><button class="text-button">Clear view</button></div><pre>[12:42:18] INFO  experience.retrieve id=EX-0047 score=0.91
+[12:42:14] INFO  tool.ffmpeg policy=allowed workspace=/projects/youtube/014
+[12:41:57] INFO  approval.created job=JOB-00124 type=code_change
+[12:41:42] INFO  planner.strategy_selected job=JOB-00124 strategy=session-aware-page-accessor
+[12:41:31] INFO  tests.targeted passed=2 failed=0</pre></section></section>
+
+      <section class="view" data-view="youtube"><div class="page-header"><div><span class="eyebrow">Application</span><h1>YouTube</h1><p>A specialized production workflow consuming the same universal Cerebro core.</p></div><button class="button primary">+ New episode job</button></div><div class="youtube-hero"><div><span class="status blue">Episode 014 · Executing</span><h2>Why online prices change while you sleep</h2><p>Research → Script → Storyboard → Voice → Visuals → Assembly → QA → Review → Publish → Analytics</p></div><button class="button" data-open-job="JOB-00131">Open job</button></div><div class="pipeline"><div class="done">Research</div><div class="done">Script</div><div class="done">Storyboard</div><div class="done">Voice</div><div class="done">Visuals</div><div class="active">Assembly</div><div>QA</div><div>Review</div><div>Publish</div><div>Analytics</div></div><div class="dashboard-grid"><section class="panel-card span-2"><div class="card-header"><div><span class="eyebrow">Production</span><h2>Assets</h2></div></div><div class="asset-grid"><div class="asset"><strong>Script</strong><span>1,842 words · approved</span></div><div class="asset"><strong>Voice</strong><span>12:36 · normalized</span></div><div class="asset"><strong>Visuals</strong><span>41 / 41 ready</span></div><div class="asset"><strong>Captions</strong><span>Generated · QA pending</span></div></div></section><section class="panel-card"><div class="card-header"><div><span class="eyebrow">Learning</span><h2>Prior insight</h2></div></div><p class="muted">Episodes with a concrete curiosity hook in the first 8 seconds retained 11% more viewers through the first minute.</p></section></div></section>
+
+      <section class="view" data-view="settings"><div class="page-header"><div><span class="eyebrow">Control</span><h1>Settings</h1><p>Human authority, approval policy, and frontend/backend connection settings.</p></div></div><div class="settings-grid"><section class="panel-card"><h2>Autonomy</h2><label class="setting-row"><span><strong>Execution mode</strong><small>Default operating boundary</small></span><select><option>Suggest → Approve → Execute</option><option>Suggest only</option></select></label><label class="setting-row"><span><strong>Code writes</strong><small>Require approval before modifying project files</small></span><input type="checkbox" checked></label><label class="setting-row"><span><strong>External publishing</strong><small>Always require explicit engineer approval</small></span><input type="checkbox" checked></label></section><section class="panel-card"><h2>Client connection</h2><label class="field"><span>API base URL</span><input value="/api"></label><label class="field"><span>WebSocket URL</span><input value="/ws/events"></label><p class="muted">These are client contracts only. Backend implementation remains replaceable.</p></section></div></section>
+    </main>
+  </div>
+
+  <dialog class="modal" id="newJobModal">
+    <form method="dialog" class="modal-card" id="newJobForm">
+      <div class="card-header"><div><span class="eyebrow">Create work</span><h2>New job</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></div>
+      <label class="field"><span>Objective</span><textarea id="newJobObjective" rows="4" placeholder="Describe the outcome Cerebro should achieve…"></textarea></label>
+      <label class="field"><span>Project</span><select><option>Shopee Tracker</option><option>Faceless YouTube</option><option>New / unassigned</option></select></label>
+      <div class="modal-actions"><button class="button" value="cancel">Cancel</button><button class="button primary" value="default" data-submit-job>Create job</button></div>
+    </form>
+  </dialog>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+:root{
+  /* surfaces */
+  --bg:#080b10;
+  --bg-1:#0b0f16;
+  --surface:#0e131b;
+  --surface-2:#141b25;
+  --surface-3:#1a2330;
+  --border:#212b38;
+  --border-soft:rgba(255,255,255,.05);
+  --border-strong:#2e3b4b;
+
+  /* text */
+  --text:#eef3f8;
+  --muted:#8fa0b3;
+  --faint:#55677b;
+
+  /* semantic status — meaning only, never reused for decoration */
+  --amber:#f0a94e;--amber-soft:rgba(240,169,78,.13);
+  --green:#5ed0a3;--green-soft:rgba(94,208,163,.13);
+  --red:#f27971;--red-soft:rgba(242,121,113,.13);
+  --blue:#5fa4f5;--blue-soft:rgba(95,164,245,.13);
+  --violet:#b090f0;--violet-soft:rgba(176,144,240,.13);
+  --grey-soft:var(--surface-3);
+
+  /* signature accent — reserved for brand, primary actions, focus, live state */
+  --signal:#5eead4;
+  --signal-2:#8b7bff;
+  --signal-soft:rgba(94,234,212,.12);
+  --signal-gradient:linear-gradient(120deg,var(--signal),var(--signal-2));
+
+  --radius-sm:6px;--radius:11px;--radius-lg:16px;
+  --shadow:0 20px 48px rgba(0,0,0,.32);
+  --shadow-inset:inset 0 1px 0 rgba(255,255,255,.035);
+  --sidebar:226px;--topbar:60px;
+
+  --font-display:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --font-body:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+
+  font-family:var(--font-body);
+}
+
+*{box-sizing:border-box}
+
+html{
+  background:var(--bg);
+  color:var(--text);
+  background-image:
+    radial-gradient(760px 420px at 14% -8%, rgba(94,234,212,.07), transparent 60%),
+    radial-gradient(640px 420px at 88% 8%, rgba(139,123,255,.06), transparent 55%);
+  background-attachment:fixed;
+}
+body{
+  margin:0;min-height:100vh;background:transparent;
+  font-size:14px;line-height:1.55;font-weight:400;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+
+h1,h2,h3,p{margin-top:0}
+h1,h2,h3,.brand,.eyebrow,.nav-label,.command-prefix{font-family:var(--font-display)}
+h1{font-size:23px;font-weight:600;line-height:1.25;letter-spacing:-.005em;margin-bottom:6px}
+h2{font-size:15px;font-weight:600;margin-bottom:8px;letter-spacing:-.002em}
+h3{font-size:13.5px;font-weight:600;margin-bottom:6px}
+
+.mono,code,pre,.job-id,kbd{font-family:var(--font-mono)}
+.muted{color:var(--muted)}
+.eyebrow{
+  display:flex;align-items:center;gap:7px;
+  color:var(--faint);font-size:10.5px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;
+}
+.eyebrow::before{content:"";width:10px;height:1px;background:var(--signal);opacity:.7;flex:none}
+.good{color:var(--green)}
+
+::selection{background:var(--signal-soft);}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:8px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:var(--border-strong)}
+
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:4px}

@@ -1,4 +1,4 @@
-﻿# Cerebro Development Current State
+# Cerebro Development Current State
 
 ## Project
 
@@ -14,11 +14,11 @@
 
 ### Current Milestone
 
-**Phase 1A — Job Lifecycle**
+**Phase 1B — Tasks**
 
 **Status: COMPLETED / VERIFIED**
 
-Phase 1A establishes the first persistent Cerebro domain lifecycle:
+Phase 1A established the first persistent Cerebro domain lifecycle:
 
 ```text
 CREATED
@@ -117,6 +117,108 @@ Terminal and failure/cancellation transitions are controlled by the transition p
 WAITING_FOR_APPROVAL → EXECUTING is intentionally not permitted by the generic Phase 1A transition endpoint. Approval authority will be implemented in Phase 2.
 
 ---
+
+# Phase 1B — Tasks
+
+**Status: COMPLETED / VERIFIED**
+
+Phase 1B introduces the persistent Task domain beneath Jobs without
+implementing execution, approvals, events, or automatic Job transitions.
+
+Implemented:
+
+- Task domain model
+- Task status enumeration
+- Controlled Task state transitions
+- Task service
+- Task repository abstraction
+- SQLite Task repository
+- Persistent Task storage
+- Task ordering by position
+- Optimistic Task versioning
+- Task REST API
+- Parent Job validation at the API boundary
+- Task lifecycle tests
+- API integration tests
+
+## Task States
+
+The current Phase 1B Task states are:
+
+```text
+PENDING
+READY
+RUNNING
+COMPLETED
+FAILED
+CANCELLED
+```
+
+## Task Lifecycle
+
+The controlled lifecycle is:
+
+```text
+PENDING → READY → RUNNING → COMPLETED
+                       ├── FAILED
+                       └── CANCELLED
+
+PENDING → CANCELLED
+READY → CANCELLED
+```
+
+`COMPLETED`, `FAILED`, and `CANCELLED` are terminal states.
+
+Phase 1B deliberately does not automatically transition the parent
+Job based on Task state. Job orchestration remains a later concern.
+
+## Persistence
+
+Tasks are persisted independently in SQLite.
+
+The current storage abstraction is:
+
+```text
+TaskService
+    ↓
+TaskRepository Protocol
+    ↓
+SqliteTaskRepository
+```
+
+Tasks are associated with exactly one Job through `job_id` and are
+returned in `position ASC, id ASC` order.
+
+## Verification
+
+Automated verification:
+
+```text
+14 tests passed
+2 warnings
+```
+
+Live runtime verification confirmed:
+
+- Task creation through the REST API
+- Multiple Tasks belonging to the same Job
+- Task listing and position ordering
+- `PENDING → READY`
+- `READY → RUNNING`
+- `RUNNING → COMPLETED`
+- `PENDING → CANCELLED`
+- Terminal-state protection for `COMPLETED`
+- Terminal-state protection for `CANCELLED`
+- Optimistic version increments
+- SQLite persistence
+- Persistence across Uvicorn application restart
+
+A stale Uvicorn process initially caused the Task endpoint to return
+`404`. The process was identified and stopped, the current application
+was restarted, and the Task API then passed live runtime verification.
+
+The parent Job remained `CREATED` throughout Task transitions, as
+required by the Phase 1B boundary.
 
 # Backend Structure
 
@@ -547,7 +649,7 @@ Current branch:
 main
 ```
 
-Last completed checkpoint commit before Phase 1A implementation:
+Previous development checkpoints:
 
 ```text
 5f02cf517b003866b9b262cade5eedbd35958a16
@@ -559,40 +661,32 @@ Commit message:
 docs: establish development state checkpoint
 ```
 
-Phase 1A implementation and verification are currently ready to be committed as the next coherent development checkpoint.
+Phase 1A checkpoint:
 
----
+```text
+4fc25e8
+```
+
+Commit message:
+
+```text
+feat: implement Phase 1A job lifecycle
+```
+
+Phase 1B implementation and verification are now ready to be
+committed as the next coherent development checkpoint.
+
+The repository is intentionally not being pushed to origin at this
+checkpoint.
 
 # Current Milestone Result
 
-Phase 1A has achieved its intended purpose:
+Phase 1B has achieved its intended purpose:
 
-> Cerebro now has a persistent Job domain with a controlled lifecycle, a service layer, a storage abstraction, a SQLite persistence adapter, and a verified REST API.
+> Cerebro now has a persistent Task domain associated with Jobs, a controlled Task lifecycle, a service layer, a storage abstraction, SQLite persistence, optimistic versioning, a verified REST API, and verified runtime behavior across application restarts.
 
-The lifecycle is no longer only conceptual. It is implemented, persisted, tested, and verified through the real application.
+The Task lifecycle is implemented, persisted, tested, and verified
+through the real application.
 
----
-
-# Next Recommended Action
-
-**Phase 1B — Tasks**
-
-Introduce the Task domain and connect Tasks to Jobs without prematurely implementing the full Engineering Loop.
-
-Recommended scope:
-
-```text
-Job
- ↓
-Tasks
- ↓
-Task lifecycle
- ↓
-Task persistence
- ↓
-Task API
- ↓
-Tests
-```
-
-Do not implement agents, tool execution, approvals, WebSocket orchestration, memory, or YouTube functionality as part of Phase 1B unless a concrete dependency requires it.
+Phase 1A remains complete and provides the persistent Job lifecycle
+that the Task domain belongs to.

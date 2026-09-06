@@ -8,6 +8,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from cerebro.api.jobs import router as jobs_router
+from cerebro.api.tasks import router as tasks_router
+from cerebro.tasks.repository import SqliteTaskRepository
+from cerebro.tasks.service import TaskService
 from cerebro.jobs.repository import SqliteJobRepository
 from cerebro.jobs.service import JobService
 
@@ -18,7 +21,12 @@ def create_app(database_path: Path | None = None) -> FastAPI:
         os.environ.get("CEREBRO_DATABASE_PATH", "workspace/data/cerebro.sqlite3")
     )
     app.state.job_service = JobService(SqliteJobRepository(app.state.database_path))
+
+    app.state.task_service = TaskService(
+        SqliteTaskRepository(app.state.database_path)
+    )
     app.include_router(jobs_router)
+    app.include_router(tasks_router)
 
     # In development, the frontend is mounted into the container at /app/frontend.
     # Keeping the API and static UI in the same service avoids CORS complexity in V1.

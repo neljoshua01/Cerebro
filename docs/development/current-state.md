@@ -668,6 +668,44 @@ has not been connected to the existing Job or Task lifecycle.
 
 The next milestone is: **Phase 1C-B — Lifecycle Event Emission**.
 
+---
+
+# Phase 1C-B-A — SQLite Transaction Infrastructure
+
+**Status: COMPLETED / VERIFIED**
+
+Implemented:
+
+- Added `backend/cerebro/core/sqlite.py`
+- Added `SqliteTransaction` context manager
+- Explicit SQLite `BEGIN`
+- Successful operations `COMMIT`
+- Exceptions `ROLLBACK`
+- Connection cleanup guaranteed
+- Reusable without Job/Task/Event domain coupling
+
+## Tests
+
+- Added `tests/test_sqlite.py`
+- 4 transaction tests passed
+- Full suite: **28 passed, 2 warnings**
+- `git diff --check`: clean
+
+## Verification
+
+- Successful transaction persists writes
+- Multiple writes commit atomically
+- Exception rolls back writes
+- Failed later write rolls back earlier writes
+- Existing Phase 1A, 1B, and 1C-A behavior remains passing
+
+## Known Issues
+
+- 2 existing dependency deprecation warnings from Starlette/httpx and AnyIO
+- No known transaction-infrastructure failures
+
+The next milestone is: **Phase 1C-B-B — Job Event Emission**.
+
 # Git State
 
 Current branch:

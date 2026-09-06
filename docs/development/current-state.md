@@ -1,222 +1,598 @@
-# Cerebro Development Current State
+﻿# Cerebro Development Current State
 
-Checkpoint date: 2026-09-06
+## Project
 
-This is a repository-state checkpoint. It records verified repository contents and verification results at the time of writing. It does not implement Phase 1A.
+**Cerebro** — reliability-first, human-directed Collaborative AI Software Engineer.
 
-## 1. Current Phase
+> Engineer provides the vision. Cerebro provides the engineering capability. Together, they build the software.
 
-- **Phase 0 — Foundation: COMPLETED / VERIFIED.** This status is the current CroadMap position supplied for this checkpoint. Repository evidence includes the FastAPI foundation, static frontend prototype, Docker configuration, API boundary, and smoke-test source; this checkpoint did not execute the tests.
-- **Phase 1 — Cerebro Core: NOT STARTED.** No Job model, state machine, engineering loop, event system, or trace system is implemented in the repository.
+---
 
-## 2. Current Milestone
+## Current Development Phase
+
+**Phase 1 — Cerebro Core**
+
+### Current Milestone
 
 **Phase 1A — Job Lifecycle**
 
-Status: **NOT STARTED**
+**Status: COMPLETED / VERIFIED**
 
-Phase 1A is the next milestone. It is not currently implemented. The intended future lifecycle direction is provided by CroadMap; it must not be represented as current behavior.
-
-## 3. Repository State
-
-Verified tracked repository structure:
+Phase 1A establishes the first persistent Cerebro domain lifecycle:
 
 ```text
-Cerebro/
-├── backend/
-│   ├── pyproject.toml
-│   ├── requirements.txt
-│   └── cerebro/
-│       ├── __init__.py
-│       ├── api/app.py
-│       └── {agents, approvals, config, core, execution, experience,
-│           jobs, memory, projects, providers, tools, trace}/__init__.py
-├── frontend/
-│   ├── index.html
-│   ├── README.md
-│   ├── css/{base,components,layout,views}.css
-│   └── js/{api,app,state}.js
-├── tests/test_api.py
-├── workspace/.gitkeep
-├── Dockerfile
-├── docker-compose.yml
-└── .gitignore
+CREATED
+   ↓
+UNDERSTANDING
+   ↓
+PLANNING
+   ↓
+PLAN_READY
+   ↓
+WAITING_FOR_APPROVAL
 ```
 
-The domain directories listed above are present but, other than the API application, contain package markers and `.gitkeep` files only. The workspace directory is empty except for `.gitkeep`.
+The lifecycle is controlled by an explicit state-transition policy.
 
-## 4. Backend Status
+Phase 1A deliberately stops at WAITING_FOR_APPROVAL. The transition from WAITING_FOR_APPROVAL to EXECUTING belongs to Phase 2 — Human Control / Approval Gates.
 
-Status: **IMPLEMENTED / UNVERIFIED** for the minimal FastAPI foundation; all Cerebro domain functionality is **NOT STARTED**.
+---
 
-- `backend/pyproject.toml` requires Python `>=3.12`; the Docker base image is `python:3.12-slim`.
-- `backend/cerebro/api/app.py` creates a FastAPI application titled `Cerebro API`, version `0.1.0`.
-- Implemented HTTP routes are listed in [API Status](#11-api-status).
-- The WebSocket route accepts a connection, emits one `{"type":"connected","service":"cerebro"}` message, and immediately closes. A persistent event stream is **NOT STARTED**.
-- The package structure reserves boundaries for agents, approvals, config, core, execution, experience, jobs, memory, projects, providers, tools, and trace. No domain logic is implemented in those packages.
-- Persistence, database access, schema definitions, migrations, and repositories are **NOT STARTED**.
-- Authentication and authorization are **NOT STARTED**.
-- Tool management, execution controls, and actual tool execution are **NOT STARTED**.
-- `/api/system/health` reports `core`, `jobs`, `agents`, and `memory` as `"scaffold"`; it does not execute component health checks.
+# Completed Work
 
-## 5. Frontend Status
+## Phase 0 — Foundation
 
-Status: **IMPLEMENTED / UNVERIFIED** as a static UI prototype; backend integration is **NOT STARTED**.
+**Status: COMPLETED / VERIFIED**
 
-- Technology: static HTML, CSS, and vanilla JavaScript. No frontend package manager, bundler, transpiler, or framework is present.
-- `frontend/index.html` contains hash-routed prototype views for overview, jobs, job detail, approvals, activity, projects, agents, memory, experience, tools, providers, health, logs, YouTube, and settings.
-- `frontend/js/state.js` contains hard-coded presentation state, including example jobs. `frontend/js/app.js` renders this local state and uses local toast messages for job creation and approval actions.
-- `frontend/js/api.js` defines a browser client boundary for job list/read/create, approval, and WebSocket calls. `app.js` does not call this client; therefore there is no actual frontend-to-backend data integration.
-- The browser WebSocket client points to `/ws/events`, but the current server closes the connection after one message.
-- The frontend README labels several endpoints as suggested/proposed; those are not implemented merely because they appear in the frontend.
+Completed:
 
-Known integration limitations:
+- Repository structure
+- Python backend foundation
+- FastAPI application
+- Frontend foundation
+- Docker structure
+- Docker Compose configuration
+- API boundary
+- Health endpoints
+- WebSocket endpoint scaffold
+- Workspace directory
+- Initial project documentation
 
-- The FastAPI application serves the HTML document only at `/`. It has no enabled static mount for the frontend's `css/*` and `js/*` references. The only `app.mount` expression is conditional on `False` and targets `/assets`, while the HTML references `/css/...` and `/js/...`. Container runtime asset delivery is therefore **UNVERIFIED** and, based on the configured routes, likely unavailable.
-- The client API contract is internally inconsistent: `frontend/README.md` proposes `POST /api/jobs/{id}/approve`, while `frontend/js/api.js` uses `POST /api/approvals/{id}/approve`. Neither route is currently implemented.
+Phase 0 was previously validated with the Dockerized application and health endpoint.
 
-## 6. Docker / Deployment Status
+---
 
-Status: **IMPLEMENTED / UNVERIFIED**.
+# Phase 1A — Job Lifecycle
 
-- `Dockerfile` builds from `python:3.12-slim`, installs `curl` and `git`, installs `backend/requirements.txt`, copies backend/frontend/workspace into `/app`, sets `PYTHONPATH=/app/backend`, exposes port `8000`, and starts Uvicorn with `cerebro.api.app:app` bound to `0.0.0.0:8000`.
-- `docker-compose.yml` defines one `cerebro` service built from the repository Dockerfile. It maps `${CEREBRO_PORT:-8000}` to container port `8000`, reads `.env`, mounts `./workspace` at `/app/workspace`, and uses `restart: unless-stopped`.
-- The Compose healthcheck calls `curl -fsS http://localhost:8000/api/health` every 15 seconds with a 5-second timeout, five retries, and a 15-second start period.
-- No Compose build, container start, or healthcheck execution was run for this checkpoint. Operational status is **UNVERIFIED**.
+**Status: COMPLETED / VERIFIED**
 
-## 7. Tests
+Implemented:
 
-Status: **UNVERIFIED**.
+- Job domain model
+- Job status enumeration
+- Controlled job state transitions
+- Job service
+- Job repository abstraction
+- SQLite repository adapter
+- Persistent job storage
+- Job REST API
+- Job lifecycle tests
+- Repository abstraction test
+- API validation and error handling
 
-- Test file present: `tests/test_api.py`.
-- It defines two TestClient tests:
-  - `test_health` expects `GET /api/health` to return HTTP 200 and `status == "ok"`.
-  - `test_system_health` expects `GET /api/system/health` to return HTTP 200 and `status == "healthy"`.
-- No tests cover Job Lifecycle, persistence, schemas, state transitions, approvals, event delivery, traces, authorization, tools, execution, frontend behavior, static asset delivery, or Docker runtime behavior. Those test areas are **NOT STARTED**.
-- Test command attempted for this checkpoint:
+## Job States
 
-  ```powershell
-  $env:PYTHONDONTWRITEBYTECODE='1'; $env:PYTHONPATH='backend'; python -m pytest -p no:cacheprovider tests/test_api.py -q
-  ```
+The current Phase 1A states are:
 
-  Result: **UNVERIFIED**. PowerShell reported that `python.exe` could not be accessed by the environment, so pytest did not start and no pass/fail result was produced.
+```text
+CREATED
+UNDERSTANDING
+PLANNING
+PLAN_READY
+WAITING_FOR_APPROVAL
+EXECUTING
+OBSERVING
+EVALUATING
+COMPLETED
+FAILED
+CANCELLED
+```
 
-## 8. Verification Performed
+The full state vocabulary exists, while Phase 1A only permits progression through:
 
-The following checks were performed for this checkpoint:
+```text
+CREATED
+    ↓
+UNDERSTANDING
+    ↓
+PLANNING
+    ↓
+PLAN_READY
+    ↓
+WAITING_FOR_APPROVAL
+```
 
-- Inspected repository structure and tracked file list.
-- Inspected `git status --short` before this documentation change: no output (clean working tree).
-- Inspected the current branch: `main`.
-- Inspected `git log --oneline -10`: one visible commit, `2473e3c chore: initialize Cerebro Docker foundation`.
-- Inspected backend application, project configuration, dependency list, frontend files/README, Dockerfile, Compose configuration, and API test file.
-- Inspected route and client-contract references using repository text search.
-- Attempted the existing pytest health tests; the Python executable was inaccessible, so the endpoint behavior was not executed or independently verified.
+Terminal and failure/cancellation transitions are controlled by the transition policy.
 
-## 9. Known Issues
+WAITING_FOR_APPROVAL → EXECUTING is intentionally not permitted by the generic Phase 1A transition endpoint. Approval authority will be implemented in Phase 2.
 
-| Status | Issue | Verified evidence |
-|---|---|---|
-| **IN PROGRESS** | Static frontend asset serving is incomplete or mismatched. | FastAPI only returns the index at `/`; the sole static mount is disabled and does not match the `css/*` and `js/*` asset URLs. Runtime behavior was not container-tested. |
-| **NOT STARTED** | Persistent WebSocket event lifecycle. | The only WebSocket route sends one connection message and then closes. |
-| **NOT STARTED** | Frontend/backend job and approval integration. | Browser API calls are defined but unused by UI code; backend job/approval routes do not exist. |
-| **NOT STARTED** | Persistence and durable audit/event data. | No database package, schema, migration, model, or repository is present. |
-| **IN PROGRESS** | API contract consolidation. | README and browser API client specify different approval route shapes. |
-| **IN PROGRESS** | Accurate runtime health reporting. | System health exposes static scaffold labels rather than checked component state. |
-| **UNVERIFIED** | Automated test execution in this environment. | Pytest could not start because Python was inaccessible. |
+---
 
-The hard-coded frontend jobs, approvals, logs, provider status, and health displays are prototype content, not verified backend state.
+# Backend Structure
 
-## 10. Database / Schema Status
+Current Job Lifecycle implementation:
 
-Status: **NOT STARTED**.
+```text
+backend/
+└── cerebro/
+    ├── api/
+    │   ├── app.py
+    │   └── jobs.py
+    │
+    └── jobs/
+        ├── __init__.py
+        ├── models.py
+        ├── repository.py
+        ├── service.py
+        └── state.py
+```
 
-No database configuration, database dependency, ORM, SQL schema, Pydantic domain schema, migration framework, repository, or persistence implementation exists in the inspected repository. No database was introduced for this checkpoint.
+Supporting development tests:
 
-## 11. API Status
+```text
+tests/
+├── test_api.py
+└── test_jobs.py
+```
 
-### IMPLEMENTED
+---
 
-| Endpoint | Current behavior | Verification status |
-|---|---|---|
-| `GET /` | Returns `/app/frontend/index.html`. | IMPLEMENTED / UNVERIFIED at runtime |
-| `GET /api/health` | Returns a static service health payload. | IMPLEMENTED / UNVERIFIED; test exists but did not run |
-| `GET /api/system/health` | Returns static component statuses, including scaffold labels. | IMPLEMENTED / UNVERIFIED; test exists but did not run |
-| `WS /ws/events` | Accepts, sends one connection payload, then closes. | IMPLEMENTED / UNVERIFIED at runtime |
+# Job Domain
 
-### PLANNED / NOT IMPLEMENTED
+The Job model currently contains:
 
-The frontend README proposes, but the backend does not implement:
+- Job ID
+- Objective
+- Optional project reference
+- Job status
+- Creation timestamp
+- Updated timestamp
+- Version
 
-- `GET /api/jobs`
-- `GET /api/jobs/{id}`
-- `POST /api/jobs`
-- `GET /api/jobs/{id}/tasks`
-- `GET /api/jobs/{id}/events`
-- `POST /api/jobs/{id}/approve`
-- `POST /api/jobs/{id}/reject`
-- `GET /api/projects`
-- `GET /api/tools`
-- `GET /api/providers`
-- `GET /api/memory`
+The version is incremented when a job transition is persisted.
 
-`frontend/js/api.js` additionally names `POST /api/approvals/{id}/approve`; it is also **NOT IMPLEMENTED**.
+---
 
-## 12. Git Status
+# State Transition Policy
 
-Before this task:
+Job state transitions are explicitly controlled.
 
-- Branch: `main`.
-- Latest commit: `2473e3c chore: initialize Cerebro Docker foundation`.
-- Working tree: clean; no uncommitted changes were reported by `git status --short`.
+Invalid transitions are rejected rather than allowing arbitrary state changes.
 
-This checkpoint introduces `docs/development/current-state.md` as the only intended repository change. Git status must be checked again after writing this file before any future commit.
+Example:
 
-## 13. Architecture Decisions
+```text
+WAITING_FOR_APPROVAL
+        ↓
+    EXECUTING
+```
 
-### Evident from the repository
+is currently rejected by the generic Phase 1A transition endpoint.
 
-- The backend is a Python/FastAPI service, with Python `>=3.12` declared and Python 3.12 used in Docker.
-- The frontend is intentionally a static vanilla HTML/CSS/JavaScript client; the frontend README says Python owns the system's intelligence, state, permissions, approvals, execution, memory, providers, and persistence.
-- The browser and API are intended to share one service, as indicated by the API comment that this avoids CORS complexity in V1.
-- The repository uses a single-container Compose deployment with a bind-mounted workspace and an HTTP healthcheck.
-- Package names establish planned separation between job, approval, execution, agent, memory, project, provider, tool, trace, and configuration concerns. They do not establish implemented behavior.
+This is intentional because human approval is a Phase 2 capability.
 
-### Development direction / CroadMap decision
+The transition policy therefore prevents Phase 1A from implicitly bypassing the future approval system.
 
-- CroadMap identifies Phase 0 as completed/verified and Phase 1 as not started.
-- The next milestone is Phase 1A — Job Lifecycle.
-- The intended autonomy boundary is **Suggest → Approve → Execute**.
-- Reliability precedes autonomy; the Engineer retains authority over goals, constraints, approvals, and final decisions.
+---
 
-## 14. Next Recommended Action
+# Persistence Architecture
 
-The next action is **Phase 1A — Job Lifecycle**, but implementation must not begin without a design and review step.
+Persistence is required, but the storage implementation is abstracted behind a domain-oriented repository contract.
 
-Before implementation, design and review:
+Current architecture:
 
-- the Job model;
-- the Job state machine and valid transitions;
-- lifecycle event requirements;
-- trace requirements;
-- persistence approach;
-- API contract; and
-- relevant tests.
+```text
+                         Cerebro
+                            │
+                            ▼
+                       Job Service
+                            │
+                            ▼
+                    JobRepository
+                       (Protocol)
+                            │
+                            ▼
+                  SqliteJobRepository
+                            │
+                            ▼
+                         SQLite
+```
 
-## 15. Handoff Instructions
+Dependency direction:
 
-If Codex becomes unavailable, continue from verified repository state:
+```text
+API
+ ↓
+Job Service
+ ↓
+Job Repository Interface
+ ↓
+SQLite Repository Adapter
+ ↓
+SQLite
+```
 
-1. Read `docs/development/current-state.md`.
-2. Run `git status`.
-3. Run `git log --oneline -10`.
-4. Inspect `git diff`.
-5. Inspect affected source files and tests.
-6. Verify `current-state.md` against the actual repository state.
-7. Determine the smallest unfinished logical task.
-8. Continue manually.
-9. Test and verify.
-10. Update `current-state.md`.
-11. Commit a coherent, verified checkpoint.
+The JobService depends on the JobRepository abstraction rather than directly depending on SQLite.
 
-**The actual repository, tests, and Git history take precedence over this document if they disagree.**
+SQLite is currently the concrete persistence adapter and is not part of the Cerebro Core contract.
+
+The current repository contract is domain-oriented:
+
+```text
+create
+get
+list
+transition
+```
+
+Future domain repositories can follow the same architectural pattern:
+
+```text
+TaskRepository
+PlanRepository
+EventRepository
+TraceRepository
+```
+
+The project should avoid introducing a giant generic storage abstraction unless a concrete requirement emerges.
+
+---
+
+# Database
+
+Current persistence implementation:
+
+**SQLite**
+
+Default database location:
+
+```text
+workspace/data/cerebro.sqlite3
+```
+
+The application supports an explicit database path through:
+
+```text
+CEREBRO_DATABASE_PATH
+```
+
+Persistence has been verified using a dedicated runtime SQLite database.
+
+A job was created, transitioned, the application was stopped, the application was restarted using the same database, and the job remained available with its state, version, and timestamps preserved.
+
+Therefore persistence is:
+
+**COMPLETED / VERIFIED**
+
+---
+
+# API
+
+## Health
+
+```text
+GET /api/health
+```
+
+Verified successfully.
+
+## System Health
+
+```text
+GET /api/system/health
+```
+
+Existing endpoint remains available.
+
+## Create Job
+
+```text
+POST /api/jobs
+```
+
+Creates a persistent Job in CREATED state.
+
+## List Jobs
+
+```text
+GET /api/jobs
+```
+
+Returns persisted jobs.
+
+## Get Job
+
+```text
+GET /api/jobs/{job_id}
+```
+
+Returns a specific persisted job.
+
+## Transition Job
+
+```text
+POST /api/jobs/{job_id}/transition
+```
+
+Request:
+
+```json
+{
+  "target_state": "UNDERSTANDING"
+}
+```
+
+The API validates the requested state and applies the domain transition policy.
+
+Invalid transitions return an error instead of mutating the job.
+
+---
+
+# Verification
+
+## Automated Tests
+
+Full test suite:
+
+```text
+8 passed, 2 warnings
+```
+
+Command:
+
+```text
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+Result:
+
+```text
+........ [100%]
+
+8 passed, 2 warnings
+```
+
+The warnings are dependency deprecation warnings from the installed FastAPI/Starlette/AnyIO stack. They did not cause test failures.
+
+## Repository Abstraction Test
+
+The Job Service was tested using a fake repository implementation.
+
+This verifies that the service depends on the repository contract rather than requiring the SQLite implementation directly.
+
+Result:
+
+```text
+6 passed, 2 warnings
+```
+
+for the Job Lifecycle test suite.
+
+## Runtime HTTP Verification
+
+A real Uvicorn instance was started and verified through HTTP requests.
+
+Verified:
+
+- Health endpoint
+- Job creation
+- Job listing
+- Job retrieval
+- Valid state transitions
+- Invalid state transition rejection
+
+The verified lifecycle progression was:
+
+```text
+CREATED
+  ↓
+UNDERSTANDING
+  ↓
+PLANNING
+  ↓
+PLAN_READY
+  ↓
+WAITING_FOR_APPROVAL
+```
+
+## Persistence Verification
+
+SQLite persistence was verified across an application restart.
+
+The same job database was reused after stopping and restarting Uvicorn.
+
+The previously created job remained available with its state and version intact.
+
+Therefore persistence is:
+
+**COMPLETED / VERIFIED**
+
+---
+
+# Current Implementation Status
+
+| Component | Status |
+| --- | --- |
+| Phase 0 Foundation | COMPLETED / VERIFIED |
+| Job domain model | COMPLETED / VERIFIED |
+| Job state model | COMPLETED / VERIFIED |
+| Transition policy | COMPLETED / VERIFIED |
+| Job service | COMPLETED / VERIFIED |
+| Job repository abstraction | COMPLETED / VERIFIED |
+| SQLite repository | COMPLETED / VERIFIED |
+| Job persistence | COMPLETED / VERIFIED |
+| Job REST API | COMPLETED / VERIFIED |
+| Job lifecycle tests | COMPLETED / VERIFIED |
+| Repository boundary test | COMPLETED / VERIFIED |
+| Runtime HTTP behavior | COMPLETED / VERIFIED |
+| Persistence across restart | COMPLETED / VERIFIED |
+| WebSocket event system | NOT STARTED |
+| Task model/lifecycle | NOT STARTED |
+| Plan model | NOT STARTED |
+| Approval system | NOT STARTED |
+| Execution system | NOT STARTED |
+| Decision trace system | NOT STARTED |
+| Full Engineering Loop | NOT STARTED |
+| Memory / Experience | NOT STARTED |
+| Dashboard integration | NOT STARTED |
+| YouTube application | NOT STARTED |
+
+---
+
+# Known Issues
+
+The following items remain intentionally outside Phase 1A:
+
+1. WebSocket events are still only scaffolded.
+2. The frontend is not yet connected to the real Job API lifecycle.
+3. Human approval gates are not yet implemented.
+4. Execution controls and permissions are not yet implemented.
+5. Tasks have not yet been implemented.
+6. Plans and decision traces have not yet been implemented.
+7. The Engineering Loop has not yet been implemented.
+8. Memory and Experience systems have not yet been implemented.
+9. Authentication/authorization has not yet been implemented.
+
+These are future milestones and should not be added to Phase 1A merely to make the current milestone appear more complete.
+
+---
+
+# Architecture Decisions
+
+## Human-directed autonomy
+
+Initial Cerebro autonomy follows:
+
+```text
+Cerebro analyzes
+      ↓
+Cerebro proposes
+      ↓
+Engineer reviews
+      ↓
+Engineer approves
+      ↓
+Cerebro executes
+      ↓
+Cerebro reports result
+```
+
+Reliability takes priority over autonomy.
+
+## Domain-oriented architecture
+
+Business logic should remain outside API route handlers.
+
+Preferred structure:
+
+```text
+API
+ ↓
+Cerebro Engine / Service
+ ↓
+Domain
+ ↓
+Repository Interface
+ ↓
+Concrete Adapter
+```
+
+## Storage abstraction
+
+Cerebro Core must not depend directly on a specific database technology.
+
+For the current Job domain:
+
+```text
+JobService
+    ↓
+JobRepository Protocol
+    ↓
+SqliteJobRepository
+```
+
+SQLite is an implementation detail that can later be replaced by another repository adapter.
+
+## Controlled state transitions
+
+Jobs cannot arbitrarily change state.
+
+All transitions pass through the domain transition policy.
+
+## Phase boundaries
+
+Phase 1A establishes the persistent Job lifecycle.
+
+Phase 2 owns human approval and execution authorization.
+
+Later phases own tools, agents, debugging, memory, and applications.
+
+---
+
+# Git State
+
+Current branch:
+
+```text
+main
+```
+
+Last completed checkpoint commit before Phase 1A implementation:
+
+```text
+5f02cf517b003866b9b262cade5eedbd35958a16
+```
+
+Commit message:
+
+```text
+docs: establish development state checkpoint
+```
+
+Phase 1A implementation and verification are currently ready to be committed as the next coherent development checkpoint.
+
+---
+
+# Current Milestone Result
+
+Phase 1A has achieved its intended purpose:
+
+> Cerebro now has a persistent Job domain with a controlled lifecycle, a service layer, a storage abstraction, a SQLite persistence adapter, and a verified REST API.
+
+The lifecycle is no longer only conceptual. It is implemented, persisted, tested, and verified through the real application.
+
+---
+
+# Next Recommended Action
+
+**Phase 1B — Tasks**
+
+Introduce the Task domain and connect Tasks to Jobs without prematurely implementing the full Engineering Loop.
+
+Recommended scope:
+
+```text
+Job
+ ↓
+Tasks
+ ↓
+Task lifecycle
+ ↓
+Task persistence
+ ↓
+Task API
+ ↓
+Tests
+```
+
+Do not implement agents, tool execution, approvals, WebSocket orchestration, memory, or YouTube functionality as part of Phase 1B unless a concrete dependency requires it.

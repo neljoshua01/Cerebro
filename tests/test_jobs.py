@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 
 from cerebro.api.app import create_app
 from cerebro.core.sqlite import SqliteTransaction
+from cerebro.events.models import EventType
+from cerebro.events.repository import SqliteEventRepository
 from cerebro.jobs.models import JobStatus
 from cerebro.jobs.repository import (
     JobNotFoundError,
@@ -234,3 +236,73 @@ def test_job_repository_transition_in_transaction_rolls_back(
 
     assert persisted.status is JobStatus.CREATED
     assert persisted.version == 1
+
+
+def test_transition_job_with_event_commits_atomically(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "cerebro.sqlite3"
+
+    job_repository = SqliteJobRepository(database_path)
+    event_repository = SqliteEventRepository(database_path)
+    service = JobService(job_repository)
+
+    job = service.create_job(
+        objective="Test atomic Job and Event persistence",
+        project="cerebro",
+    )
+
+    transitioned, event = service.transition_job_with_event(
+        job_id=job.id,
+        target=JobStatus.UNDERSTANDING,
+        event_repository=event_repository,
+        transaction=SqliteTransaction(database_path),
+    )
+
+    assert transitioned.status is JobStatus.UNDERSTANDING
+    assert transitioned.version == 2
+
+    persisted_job = job_repository.get(job.id)
+    persisted_event = event_repository.get(event.id)
+
+    assert persisted_job == transitioned
+    assert persisted_event == event
+
+    assert event.event_type is EventType.JOB_STATE_CHANGED
+    assert event.job_id == job.id
+    assert event.payload == {
+        "from_state": "CREATED",
+        "to_state": "UNDERSTANDING",
+        "version": 2,
+    }
+
+
+def test_transition_job_with_event_rolls_back_job_when_event_fails(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "cerebro.sqlite3"
+
+    job_repository = SqliteJobRepository(database_path)
+    service = JobService(job_repository)
+
+    job = service.create_job(
+        objective="Test atomic rollback",
+        project="cerebro",
+    )
+
+    class FailingEventRepository:
+        def create_in_transaction(self, connection, event):
+            raise RuntimeError("forced event failure")
+
+    with pytest.raises(RuntimeError, match="forced event failure"):
+        service.transition_job_with_event(
+            job_id=job.id,
+            target=JobStatus.UNDERSTANDING,
+            event_repository=FailingEventRepository(),
+            transaction=SqliteTransaction(database_path),
+        )
+
+    persisted_job = job_repository.get(job.id)
+
+    assert persisted_job.status is JobStatus.CREATED
+    assert persisted_job.version == 1

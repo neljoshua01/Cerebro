@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from cerebro.core.sqlite import SqliteTransaction
 from cerebro.events.models import Event, EventType
 from cerebro.events.repository import (
     EventConflictError,
@@ -207,6 +208,41 @@ def test_event_persists_across_repository_instances(tmp_path: Path) -> None:
     repository_two = SqliteEventRepository(database_path)
 
     assert repository_two.get(event.id) == event
+
+
+def test_event_repository_create_in_transaction_commits(tmp_path: Path) -> None:
+    database_path = tmp_path / "events.sqlite3"
+    repository = SqliteEventRepository(database_path)
+
+    event = make_event(
+        "transaction-event",
+        occurred_at=datetime(2026, 9, 6, 10, 9, tzinfo=timezone.utc),
+    )
+
+    with SqliteTransaction(database_path) as connection:
+        repository.create_in_transaction(connection, event)
+
+    assert repository.get(event.id) == event
+
+
+def test_event_repository_create_in_transaction_rolls_back(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "events.sqlite3"
+    repository = SqliteEventRepository(database_path)
+
+    event = make_event(
+        "rollback-event",
+        occurred_at=datetime(2026, 9, 6, 10, 10, tzinfo=timezone.utc),
+    )
+
+    with pytest.raises(RuntimeError):
+        with SqliteTransaction(database_path) as connection:
+            repository.create_in_transaction(connection, event)
+            raise RuntimeError("force rollback")
+
+    with pytest.raises(EventNotFoundError):
+        repository.get(event.id)
 
 
 def test_duplicate_event_id_raises_conflict(tmp_path: Path) -> None:

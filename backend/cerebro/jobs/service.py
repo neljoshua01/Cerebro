@@ -3,6 +3,9 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
+from cerebro.core.sqlite import SqliteTransaction
+from cerebro.events.models import Event, EventType
+from cerebro.events.repository import SqliteEventRepository
 from cerebro.jobs.models import Job, JobStatus
 from cerebro.jobs.repository import JobRepository
 from cerebro.jobs.state import validate_transition
@@ -39,3 +42,44 @@ class JobService:
             target,
             datetime.now(timezone.utc),
         )
+
+    def transition_job_with_event(
+        self,
+        *,
+        job_id: str,
+        target: JobStatus,
+        event_repository: SqliteEventRepository,
+        transaction: SqliteTransaction,
+    ) -> tuple[Job, Event]:
+        job = self._repository.get(job_id)
+        validate_transition(job.status, target)
+
+        updated_at = datetime.now(timezone.utc)
+
+        with transaction as connection:
+            transitioned = self._repository.transition_in_transaction(
+                connection,
+                job,
+                target,
+                updated_at,
+            )
+
+            event = Event(
+                id=str(uuid4()),
+                event_type=EventType.JOB_STATE_CHANGED,
+                occurred_at=updated_at,
+                job_id=transitioned.id,
+                task_id=None,
+                payload={
+                    "from_state": job.status.value,
+                    "to_state": transitioned.status.value,
+                    "version": transitioned.version,
+                },
+            )
+
+            event_repository.create_in_transaction(
+                connection,
+                event,
+            )
+
+        return transitioned, event

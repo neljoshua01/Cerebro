@@ -108,6 +108,42 @@ class SqliteEventRepository:
 
         return event
 
+    def create_in_transaction(
+        self,
+        connection: sqlite3.Connection,
+        event: Event,
+    ) -> Event:
+        payload = json.dumps(event.payload)
+
+        try:
+            connection.execute(
+                """
+                INSERT INTO events (
+                    id,
+                    event_type,
+                    occurred_at,
+                    job_id,
+                    task_id,
+                    payload
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    event.id,
+                    event.event_type.value,
+                    event.occurred_at.isoformat(),
+                    event.job_id,
+                    event.task_id,
+                    payload,
+                ),
+            )
+        except sqlite3.IntegrityError as error:
+            raise EventConflictError(
+                f"Event '{event.id}' could not be persisted."
+            ) from error
+
+        return event
+
     def get(self, event_id: str) -> Event:
         with self._connect() as connection:
             row = connection.execute(

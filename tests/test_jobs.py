@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -6,8 +6,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cerebro.api.app import create_app
+from cerebro.core.sqlite import SqliteTransaction
 from cerebro.jobs.models import JobStatus
-from cerebro.jobs.repository import JobRepository, SqliteJobRepository
+from cerebro.jobs.repository import (
+    JobNotFoundError,
+    JobRepository,
+    SqliteJobRepository,
+)
 from cerebro.jobs.service import JobService
 from cerebro.jobs.state import InvalidJobTransitionError
 
@@ -156,3 +161,76 @@ def test_job_api_rejects_unknown_jobs_invalid_states_and_invalid_transitions(tmp
     assert client.post(
         f"/api/jobs/{job['id']}/transition", json={"target_state": "COMPLETED"}
     ).status_code == 409
+
+def test_job_repository_create_in_transaction_commits(tmp_path: Path) -> None:
+    database_path = tmp_path / "jobs.sqlite3"
+    repository = SqliteJobRepository(database_path)
+
+    job = make_service(database_path).create_job(
+        objective="Transaction commit test",
+        project="cerebro",
+    )
+
+    # Remove the normally persisted job so this test specifically exercises
+    # the transaction-aware repository method.
+    with SqliteTransaction(database_path) as connection:
+        connection.execute("DELETE FROM jobs WHERE id = ?", (job.id,))
+
+        repository.create_in_transaction(connection, job)
+
+    retrieved = repository.get(job.id)
+
+    assert retrieved == job
+
+
+def test_job_repository_create_in_transaction_rolls_back(tmp_path: Path) -> None:
+    database_path = tmp_path / "jobs.sqlite3"
+    repository = SqliteJobRepository(database_path)
+
+    job = make_service(database_path).create_job(
+        objective="Transaction rollback test",
+        project="cerebro",
+    )
+
+    with SqliteTransaction(database_path) as connection:
+        connection.execute("DELETE FROM jobs WHERE id = ?", (job.id,))
+
+    with pytest.raises(RuntimeError):
+        with SqliteTransaction(database_path) as connection:
+            repository.create_in_transaction(connection, job)
+
+            raise RuntimeError("force rollback")
+
+    with pytest.raises(JobNotFoundError):
+        repository.get(job.id)
+
+
+def test_job_repository_transition_in_transaction_rolls_back(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "jobs.sqlite3"
+    repository = SqliteJobRepository(database_path)
+
+    job = make_service(database_path).create_job(
+        objective="Transaction transition test",
+        project="cerebro",
+    )
+
+    with pytest.raises(RuntimeError):
+        with SqliteTransaction(database_path) as connection:
+            transitioned = repository.transition_in_transaction(
+                connection,
+                job,
+                JobStatus.UNDERSTANDING,
+                job.updated_at,
+            )
+
+            assert transitioned.status is JobStatus.UNDERSTANDING
+            assert transitioned.version == 2
+
+            raise RuntimeError("force rollback")
+
+    persisted = repository.get(job.id)
+
+    assert persisted.status is JobStatus.CREATED
+    assert persisted.version == 1

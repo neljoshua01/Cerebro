@@ -83,6 +83,36 @@ class SqliteJobRepository:
             )
         return job
 
+    def create_in_transaction(
+        self,
+        connection: sqlite3.Connection,
+        job: Job,
+    ) -> Job:
+        connection.execute(
+            """
+            INSERT INTO jobs (
+                id,
+                objective,
+                project,
+                status,
+                created_at,
+                updated_at,
+                version
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                job.id,
+                job.objective,
+                job.project,
+                job.status.value,
+                _serialize_timestamp(job.created_at),
+                _serialize_timestamp(job.updated_at),
+                job.version,
+            ),
+        )
+        return job
+
     def get(self, job_id: str) -> Job:
         with self._connect() as connection:
             row = connection.execute(
@@ -126,6 +156,46 @@ class SqliteJobRepository:
                     job.status.value,
                 ),
             )
+
+        if result.rowcount != 1:
+            raise JobConcurrencyError(
+                f"Job '{job.id}' changed before the transition could be persisted."
+            )
+
+        return Job(
+            id=job.id,
+            objective=job.objective,
+            project=job.project,
+            status=target,
+            created_at=job.created_at,
+            updated_at=updated_at,
+            version=new_version,
+        )
+
+    def transition_in_transaction(
+        self,
+        connection: sqlite3.Connection,
+        job: Job,
+        target: JobStatus,
+        updated_at: datetime,
+    ) -> Job:
+        new_version = job.version + 1
+
+        result = connection.execute(
+            """
+            UPDATE jobs
+            SET status = ?, updated_at = ?, version = ?
+            WHERE id = ? AND version = ? AND status = ?
+            """,
+            (
+                target.value,
+                _serialize_timestamp(updated_at),
+                new_version,
+                job.id,
+                job.version,
+                job.status.value,
+            ),
+        )
 
         if result.rowcount != 1:
             raise JobConcurrencyError(

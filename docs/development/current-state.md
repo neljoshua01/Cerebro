@@ -539,7 +539,7 @@ Therefore persistence is:
 | Runtime HTTP behavior | COMPLETED / VERIFIED |
 | Persistence across restart | COMPLETED / VERIFIED |
 | WebSocket event system | NOT STARTED |
-| Task model/lifecycle | NOT STARTED |
+| Task model/lifecycle | COMPLETED / VERIFIED |
 | Plan model | NOT STARTED |
 | Approval system | NOT STARTED |
 | Execution system | NOT STARTED |
@@ -640,6 +640,33 @@ Phase 2 owns human approval and execution authorization.
 Later phases own tools, agents, debugging, memory, and applications.
 
 ---
+
+# Phase 1C-A — Event Domain Model + Event Persistence
+
+**Status: COMPLETED / VERIFIED**
+
+Implemented:
+
+- Event model
+- Event types
+- Immutable event records
+- EventRepository
+- SQLite persistence
+- JSON payload serialization
+- Deterministic ordering
+- Job/Task filtering
+- Duplicate-ID protection
+- 10 Event tests
+- Full suite: **24 passed, 2 warnings**
+
+Phase 1C-A deliberately does not perform automatic event emission.
+
+There is no WebSocket integration yet.
+
+The Event domain remains an independent domain/persistence layer and
+has not been connected to the existing Job or Task lifecycle.
+
+The next milestone is: **Phase 1C-B — Lifecycle Event Emission**.
 
 # Git State
 

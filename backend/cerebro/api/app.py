@@ -9,6 +9,8 @@ from fastapi.staticfiles import StaticFiles
 
 from cerebro.api.jobs import router as jobs_router
 from cerebro.api.tasks import router as tasks_router
+from cerebro.core.sqlite import SqliteTransaction
+from cerebro.events.repository import SqliteEventRepository
 from cerebro.tasks.repository import SqliteTaskRepository
 from cerebro.tasks.service import TaskService
 from cerebro.jobs.repository import SqliteJobRepository
@@ -20,7 +22,11 @@ def create_app(database_path: Path | None = None) -> FastAPI:
     app.state.database_path = database_path or Path(
         os.environ.get("CEREBRO_DATABASE_PATH", "workspace/data/cerebro.sqlite3")
     )
-    app.state.job_service = JobService(SqliteJobRepository(app.state.database_path))
+    app.state.job_service = JobService(
+        SqliteJobRepository(app.state.database_path),
+        SqliteEventRepository(app.state.database_path),
+        SqliteTransaction(app.state.database_path),
+    )
 
     app.state.task_service = TaskService(
         SqliteTaskRepository(app.state.database_path)

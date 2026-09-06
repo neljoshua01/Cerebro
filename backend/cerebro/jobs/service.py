@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -12,8 +12,15 @@ from cerebro.jobs.state import validate_transition
 
 
 class JobService:
-    def __init__(self, repository: JobRepository) -> None:
+    def __init__(
+        self,
+        repository: JobRepository,
+        event_repository: SqliteEventRepository | None = None,
+        transaction: SqliteTransaction | None = None,
+    ) -> None:
         self._repository = repository
+        self._event_repository = event_repository
+        self._transaction = transaction
 
     def create_job(self, *, objective: str, project: str) -> Job:
         now = datetime.now(timezone.utc)
@@ -35,13 +42,22 @@ class JobService:
         return self._repository.list()
 
     def transition_job(self, *, job_id: str, target: JobStatus) -> Job:
-        job = self._repository.get(job_id)
-        validate_transition(job.status, target)
-        return self._repository.transition(
-            job,
-            target,
-            datetime.now(timezone.utc),
+        if self._event_repository is None or self._transaction is None:
+            job = self._repository.get(job_id)
+            validate_transition(job.status, target)
+            return self._repository.transition(
+                job,
+                target,
+                datetime.now(timezone.utc),
+            )
+
+        transitioned, _ = self.transition_job_with_event(
+            job_id=job_id,
+            target=target,
+            event_repository=self._event_repository,
+            transaction=self._transaction,
         )
+        return transitioned
 
     def transition_job_with_event(
         self,

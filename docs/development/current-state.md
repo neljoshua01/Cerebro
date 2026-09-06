@@ -14,9 +14,14 @@
 
 ### Current Milestone
 
-**Phase 1B — Tasks**
+**Current milestone:**
+Phase 1C-C — WebSocket Event Stream
 
-**Status: COMPLETED / VERIFIED**
+**Completed:**
+Phase 1C-C-1 — WebSocket Connection Manager
+
+**Next:**
+Phase 1C-C-2 — WebSocket Endpoint
 
 Phase 1A established the first persistent Cerebro domain lifecycle:
 
@@ -704,7 +709,47 @@ Implemented:
 - 2 existing dependency deprecation warnings from Starlette/httpx and AnyIO
 - No known transaction-infrastructure failures
 
-The next milestone is: **Phase 1C-B-B — Job Event Emission**.
+The next milestone is: **Phase 1C-C — WebSocket Event Stream**.
+
+---
+
+# Phase 1C-C-1 — WebSocket Connection Manager
+
+**Status: COMPLETED / VERIFIED**
+
+Implemented:
+
+- Added EventBroadcaster.
+- Added connection registration.
+- Added connection removal.
+- Added broadcast support.
+- Failed WebSocket connections are removed automatically.
+- A failed connection does not prevent other connections from receiving broadcasts.
+- Broadcaster uses an in-memory connection set.
+- Broadcaster has no persistence responsibilities.
+- Broadcaster is independent of FastAPI through a WebSocketConnection protocol.
+
+## Tests
+
+- Added `tests/test_broadcaster.py`.
+- Focused tests: 6 passed.
+- Full test suite: 43 passed, 2 existing dependency deprecation warnings.
+
+## Verification
+
+- Single-client broadcast verified.
+- Multi-client broadcast verified.
+- Disconnect behavior verified.
+- Failed-client isolation verified.
+- Failed connections are removed from the broadcaster.
+- No regression in existing Job, Task, Event, and transaction functionality.
+
+## Not implemented yet
+
+- WebSocket FastAPI endpoint integration.
+- Event-to-broadcaster integration.
+- Frontend event consumption.
+- Live end-to-end WebSocket verification.
 
 # Git State
 

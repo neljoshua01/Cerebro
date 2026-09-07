@@ -21,7 +21,7 @@ Phase 1C-C — WebSocket Event Stream
 Phase 1C-C-1 — WebSocket Connection Manager
 
 **Next:**
-Phase 1C-C-2 — WebSocket Endpoint
+Phase 1C-C-3 — Event → Broadcaster Integration
 
 Phase 1A established the first persistent Cerebro domain lifecycle:
 
@@ -750,6 +750,48 @@ Implemented:
 - Event-to-broadcaster integration.
 - Frontend event consumption.
 - Live end-to-end WebSocket verification.
+
+---
+
+# Phase 1C-C-2 — WebSocket Endpoint
+
+**Status: COMPLETED / VERIFIED**
+
+Implemented:
+
+- Integrated the `/ws/events` FastAPI WebSocket endpoint with `EventBroadcaster`.
+- Added application-level broadcaster initialization through `app.state.event_broadcaster`.
+- WebSocket connections are accepted and registered with the broadcaster.
+- Connections remain open while the client is connected.
+- Client disconnects are handled through `WebSocketDisconnect`.
+- Disconnected clients are removed from the broadcaster.
+- The previous placeholder behavior that immediately closed the WebSocket connection was removed.
+- No event persistence or Job/Task mutation occurs in the WebSocket endpoint.
+- Event-to-broadcaster publishing is intentionally deferred to Phase 1C-C-3.
+
+## Tests
+
+- Added `tests/test_websocket.py`.
+- WebSocket connection/lifecycle tests: 2 passed.
+- Full test suite: 45 passed.
+- 2 existing dependency deprecation warnings remain from Starlette/AnyIO.
+
+## Verification
+
+- `/ws/events` accepts a WebSocket connection.
+- Connection remains open after connection establishment.
+- Client can communicate while connected.
+- Client disconnect is handled cleanly.
+- Broadcaster registration occurs on connection.
+- Broadcaster cleanup occurs on disconnect.
+- Existing Job, Task, Event, transaction, and broadcaster tests continue to pass.
+
+## Not implemented yet
+
+- Event-to-broadcaster integration.
+- Broadcasting persisted Job lifecycle events.
+- Frontend live event consumption.
+- Live end-to-end lifecycle event verification.
 
 # Git State
 

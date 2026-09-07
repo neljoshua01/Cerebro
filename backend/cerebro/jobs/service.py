@@ -64,9 +64,17 @@ class JobService:
         *,
         job_id: str,
         target: JobStatus,
-        event_repository: SqliteEventRepository,
-        transaction: SqliteTransaction,
+        event_repository: SqliteEventRepository | None = None,
+        transaction: SqliteTransaction | None = None,
     ) -> tuple[Job, Event]:
+        event_repository = event_repository or self._event_repository
+        transaction = transaction or self._transaction
+
+        if event_repository is None or transaction is None:
+            raise RuntimeError(
+                "Event repository and transaction are required for event-aware transitions."
+            )
+
         job = self._repository.get(job_id)
         validate_transition(job.status, target)
 

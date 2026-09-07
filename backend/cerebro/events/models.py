@@ -20,3 +20,13 @@ class Event:
     job_id: str | None
     task_id: str | None
     payload: dict[str, object]
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "id": self.id,
+            "event_type": self.event_type.value,
+            "occurred_at": self.occurred_at.isoformat(),
+            "job_id": self.job_id,
+            "task_id": self.task_id,
+            "payload": self.payload,
+        }

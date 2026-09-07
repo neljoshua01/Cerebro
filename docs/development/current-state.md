@@ -1,8 +1,9 @@
+@'
 # Cerebro Development Current State
 
 ## Project
 
-**Cerebro** — reliability-first, human-directed Collaborative AI Software Engineer.
+**Cerebro** - reliability-first, human-directed Collaborative AI Software Engineer.
 
 > Engineer provides the vision. Cerebro provides the engineering capability. Together, they build the software.
 
@@ -10,835 +11,336 @@
 
 ## Current Development Phase
 
-**Phase 1 — Cerebro Core**
+**Phase 1 - Cerebro Core**
 
 ### Current Milestone
 
-**Current milestone:**
-Phase 1C-C — WebSocket Event Stream
+**Phase 1C-C - WebSocket Event Stream**
 
-**Completed:**
-Phase 1C-C-1 — WebSocket Connection Manager
+**Status:** COMPLETED / VERIFIED
 
-**Next:**
-Phase 1C-C-3 — Event → Broadcaster Integration
+Phase 1C-C is complete through:
 
-Phase 1A established the first persistent Cerebro domain lifecycle:
+- Phase 1C-C-1 - WebSocket Connection Manager
+- Phase 1C-C-2 - WebSocket Endpoint
+- Phase 1C-C-3 - Event -> Broadcaster Integration
 
-```text
-CREATED
-   ↓
-UNDERSTANDING
-   ↓
-PLANNING
-   ↓
-PLAN_READY
-   ↓
-WAITING_FOR_APPROVAL
-```
+### Next Milestone
 
-The lifecycle is controlled by an explicit state-transition policy.
-
-Phase 1A deliberately stops at WAITING_FOR_APPROVAL. The transition from WAITING_FOR_APPROVAL to EXECUTING belongs to Phase 2 — Human Control / Approval Gates.
+**Phase 1C-D - Plans & Decision Traces**
 
 ---
 
-# Completed Work
-
-## Phase 0 — Foundation
-
-**Status: COMPLETED / VERIFIED**
-
-Completed:
-
-- Repository structure
-- Python backend foundation
-- FastAPI application
-- Frontend foundation
-- Docker structure
-- Docker Compose configuration
-- API boundary
-- Health endpoints
-- WebSocket endpoint scaffold
-- Workspace directory
-- Initial project documentation
-
-Phase 0 was previously validated with the Dockerized application and health endpoint.
-
----
-
-# Phase 1A — Job Lifecycle
-
-**Status: COMPLETED / VERIFIED**
-
-Implemented:
-
-- Job domain model
-- Job status enumeration
-- Controlled job state transitions
-- Job service
-- Job repository abstraction
-- SQLite repository adapter
-- Persistent job storage
-- Job REST API
-- Job lifecycle tests
-- Repository abstraction test
-- API validation and error handling
-
-## Job States
-
-The current Phase 1A states are:
+# CroadMap Status
 
 ```text
-CREATED
-UNDERSTANDING
-PLANNING
-PLAN_READY
-WAITING_FOR_APPROVAL
-EXECUTING
-OBSERVING
-EVALUATING
-COMPLETED
-FAILED
-CANCELLED
-```
-
-The full state vocabulary exists, while Phase 1A only permits progression through:
-
-```text
-CREATED
-    ↓
-UNDERSTANDING
-    ↓
-PLANNING
-    ↓
-PLAN_READY
-    ↓
-WAITING_FOR_APPROVAL
-```
-
-Terminal and failure/cancellation transitions are controlled by the transition policy.
-
-WAITING_FOR_APPROVAL → EXECUTING is intentionally not permitted by the generic Phase 1A transition endpoint. Approval authority will be implemented in Phase 2.
-
----
-
-# Phase 1B — Tasks
-
-**Status: COMPLETED / VERIFIED**
-
-Phase 1B introduces the persistent Task domain beneath Jobs without
-implementing execution, approvals, events, or automatic Job transitions.
-
-Implemented:
-
-- Task domain model
-- Task status enumeration
-- Controlled Task state transitions
-- Task service
-- Task repository abstraction
-- SQLite Task repository
-- Persistent Task storage
-- Task ordering by position
-- Optimistic Task versioning
-- Task REST API
-- Parent Job validation at the API boundary
-- Task lifecycle tests
-- API integration tests
-
-## Task States
-
-The current Phase 1B Task states are:
-
-```text
-PENDING
-READY
-RUNNING
-COMPLETED
-FAILED
-CANCELLED
-```
-
-## Task Lifecycle
-
-The controlled lifecycle is:
-
-```text
-PENDING → READY → RUNNING → COMPLETED
-                       ├── FAILED
-                       └── CANCELLED
-
-PENDING → CANCELLED
-READY → CANCELLED
-```
-
-`COMPLETED`, `FAILED`, and `CANCELLED` are terminal states.
-
-Phase 1B deliberately does not automatically transition the parent
-Job based on Task state. Job orchestration remains a later concern.
-
-## Persistence
-
-Tasks are persisted independently in SQLite.
-
-The current storage abstraction is:
-
-```text
-TaskService
-    ↓
-TaskRepository Protocol
-    ↓
-SqliteTaskRepository
-```
-
-Tasks are associated with exactly one Job through `job_id` and are
-returned in `position ASC, id ASC` order.
-
-## Verification
-
-Automated verification:
-
-```text
-14 tests passed
-2 warnings
-```
-
-Live runtime verification confirmed:
-
-- Task creation through the REST API
-- Multiple Tasks belonging to the same Job
-- Task listing and position ordering
-- `PENDING → READY`
-- `READY → RUNNING`
-- `RUNNING → COMPLETED`
-- `PENDING → CANCELLED`
-- Terminal-state protection for `COMPLETED`
-- Terminal-state protection for `CANCELLED`
-- Optimistic version increments
-- SQLite persistence
-- Persistence across Uvicorn application restart
-
-A stale Uvicorn process initially caused the Task endpoint to return
-`404`. The process was identified and stopped, the current application
-was restarted, and the Task API then passed live runtime verification.
-
-The parent Job remained `CREATED` throughout Task transitions, as
-required by the Phase 1B boundary.
-
-# Backend Structure
-
-Current Job Lifecycle implementation:
-
-```text
-backend/
-└── cerebro/
-    ├── api/
-    │   ├── app.py
-    │   └── jobs.py
-    │
-    └── jobs/
-        ├── __init__.py
-        ├── models.py
-        ├── repository.py
-        ├── service.py
-        └── state.py
-```
-
-Supporting development tests:
-
-```text
-tests/
-├── test_api.py
-└── test_jobs.py
-```
-
----
-
-# Job Domain
-
-The Job model currently contains:
-
-- Job ID
-- Objective
-- Optional project reference
-- Job status
-- Creation timestamp
-- Updated timestamp
-- Version
-
-The version is incremented when a job transition is persisted.
-
----
-
-# State Transition Policy
-
-Job state transitions are explicitly controlled.
-
-Invalid transitions are rejected rather than allowing arbitrary state changes.
-
-Example:
-
-```text
-WAITING_FOR_APPROVAL
-        ↓
-    EXECUTING
-```
-
-is currently rejected by the generic Phase 1A transition endpoint.
-
-This is intentional because human approval is a Phase 2 capability.
-
-The transition policy therefore prevents Phase 1A from implicitly bypassing the future approval system.
-
----
-
-# Persistence Architecture
-
-Persistence is required, but the storage implementation is abstracted behind a domain-oriented repository contract.
-
-Current architecture:
-
-```text
-                         Cerebro
-                            │
-                            ▼
-                       Job Service
-                            │
-                            ▼
-                    JobRepository
-                       (Protocol)
-                            │
-                            ▼
-                  SqliteJobRepository
-                            │
-                            ▼
-                         SQLite
-```
-
-Dependency direction:
-
-```text
-API
- ↓
-Job Service
- ↓
-Job Repository Interface
- ↓
-SQLite Repository Adapter
- ↓
-SQLite
-```
-
-The JobService depends on the JobRepository abstraction rather than directly depending on SQLite.
-
-SQLite is currently the concrete persistence adapter and is not part of the Cerebro Core contract.
-
-The current repository contract is domain-oriented:
-
-```text
-create
-get
-list
-transition
-```
-
-Future domain repositories can follow the same architectural pattern:
-
-```text
-TaskRepository
-PlanRepository
-EventRepository
-TraceRepository
-```
-
-The project should avoid introducing a giant generic storage abstraction unless a concrete requirement emerges.
-
----
-
-# Database
-
-Current persistence implementation:
-
-**SQLite**
-
-Default database location:
-
-```text
-workspace/data/cerebro.sqlite3
-```
-
-The application supports an explicit database path through:
-
-```text
-CEREBRO_DATABASE_PATH
-```
-
-Persistence has been verified using a dedicated runtime SQLite database.
-
-A job was created, transitioned, the application was stopped, the application was restarted using the same database, and the job remained available with its state, version, and timestamps preserved.
-
-Therefore persistence is:
-
-**COMPLETED / VERIFIED**
-
----
-
-# API
-
-## Health
-
-```text
-GET /api/health
-```
-
-Verified successfully.
-
-## System Health
-
-```text
-GET /api/system/health
-```
-
-Existing endpoint remains available.
-
-## Create Job
-
-```text
-POST /api/jobs
-```
-
-Creates a persistent Job in CREATED state.
-
-## List Jobs
-
-```text
-GET /api/jobs
-```
-
-Returns persisted jobs.
-
-## Get Job
-
-```text
-GET /api/jobs/{job_id}
-```
-
-Returns a specific persisted job.
-
-## Transition Job
-
-```text
-POST /api/jobs/{job_id}/transition
-```
-
-Request:
-
-```json
-{
-  "target_state": "UNDERSTANDING"
-}
-```
-
-The API validates the requested state and applies the domain transition policy.
-
-Invalid transitions return an error instead of mutating the job.
-
----
-
-# Verification
-
-## Automated Tests
-
-Full test suite:
-
-```text
-8 passed, 2 warnings
-```
-
-Command:
-
-```text
-.\.venv\Scripts\python.exe -m pytest -q
-```
-
-Result:
-
-```text
-........ [100%]
-
-8 passed, 2 warnings
-```
-
-The warnings are dependency deprecation warnings from the installed FastAPI/Starlette/AnyIO stack. They did not cause test failures.
-
-## Repository Abstraction Test
-
-The Job Service was tested using a fake repository implementation.
-
-This verifies that the service depends on the repository contract rather than requiring the SQLite implementation directly.
-
-Result:
-
-```text
-6 passed, 2 warnings
-```
-
-for the Job Lifecycle test suite.
-
-## Runtime HTTP Verification
-
-A real Uvicorn instance was started and verified through HTTP requests.
-
-Verified:
-
-- Health endpoint
-- Job creation
-- Job listing
-- Job retrieval
-- Valid state transitions
-- Invalid state transition rejection
-
-The verified lifecycle progression was:
-
-```text
-CREATED
-  ↓
-UNDERSTANDING
-  ↓
-PLANNING
-  ↓
-PLAN_READY
-  ↓
-WAITING_FOR_APPROVAL
-```
-
-## Persistence Verification
-
-SQLite persistence was verified across an application restart.
-
-The same job database was reused after stopping and restarting Uvicorn.
-
-The previously created job remained available with its state and version intact.
-
-Therefore persistence is:
-
-**COMPLETED / VERIFIED**
-
----
-
-# Current Implementation Status
-
-| Component | Status |
-| --- | --- |
-| Phase 0 Foundation | COMPLETED / VERIFIED |
-| Job domain model | COMPLETED / VERIFIED |
-| Job state model | COMPLETED / VERIFIED |
-| Transition policy | COMPLETED / VERIFIED |
-| Job service | COMPLETED / VERIFIED |
-| Job repository abstraction | COMPLETED / VERIFIED |
-| SQLite repository | COMPLETED / VERIFIED |
-| Job persistence | COMPLETED / VERIFIED |
-| Job REST API | COMPLETED / VERIFIED |
-| Job lifecycle tests | COMPLETED / VERIFIED |
-| Repository boundary test | COMPLETED / VERIFIED |
-| Runtime HTTP behavior | COMPLETED / VERIFIED |
-| Persistence across restart | COMPLETED / VERIFIED |
-| WebSocket event system | NOT STARTED |
-| Task model/lifecycle | COMPLETED / VERIFIED |
-| Plan model | NOT STARTED |
-| Approval system | NOT STARTED |
-| Execution system | NOT STARTED |
-| Decision trace system | NOT STARTED |
-| Full Engineering Loop | NOT STARTED |
-| Memory / Experience | NOT STARTED |
-| Dashboard integration | NOT STARTED |
-| YouTube application | NOT STARTED |
-
----
-
-# Known Issues
-
-The following items remain intentionally outside Phase 1A:
-
-1. WebSocket events are still only scaffolded.
-2. The frontend is not yet connected to the real Job API lifecycle.
-3. Human approval gates are not yet implemented.
-4. Execution controls and permissions are not yet implemented.
-5. Tasks have not yet been implemented.
-6. Plans and decision traces have not yet been implemented.
-7. The Engineering Loop has not yet been implemented.
-8. Memory and Experience systems have not yet been implemented.
-9. Authentication/authorization has not yet been implemented.
-
-These are future milestones and should not be added to Phase 1A merely to make the current milestone appear more complete.
-
----
-
-# Architecture Decisions
-
-## Human-directed autonomy
-
-Initial Cerebro autonomy follows:
-
-```text
-Cerebro analyzes
-      ↓
-Cerebro proposes
-      ↓
-Engineer reviews
-      ↓
-Engineer approves
-      ↓
-Cerebro executes
-      ↓
-Cerebro reports result
-```
-
-Reliability takes priority over autonomy.
-
-## Domain-oriented architecture
-
-Business logic should remain outside API route handlers.
-
-Preferred structure:
-
-```text
-API
- ↓
-Cerebro Engine / Service
- ↓
+PHASE 0 - Foundation
+    COMPLETED / VERIFIED
+
+        |
+        v
+
+PHASE 1 - Cerebro Core
+    |- 1A Job Lifecycle
+    |     COMPLETED / VERIFIED
+    |
+    |- 1B Tasks
+    |     COMPLETED / VERIFIED
+    |
+    |- 1C-A Events
+    |     COMPLETED / VERIFIED
+    |
+    |- 1C-B Transactions
+    |     COMPLETED / VERIFIED
+    |
+    `- 1C-C WebSocket Event Stream
+          COMPLETED / VERIFIED
+
+        |
+        v
+
+    1C-D Plans & Decision Traces
+          NEXT
+
+        |
+        v
+
+PHASE 2 - Human Control
+    PENDING
+
+        |
+        v
+
+PHASE 3 - Tools
+    PENDING
+
+        |
+        v
+
+PHASE 4 - First Engineering Agent
+    PENDING
+
+        |
+        v
+
+PHASE 5 - Real Project / Shop Tracker
+    PENDING
+
+        |
+        v
+
+PHASE 6 - Memory + Experience
+    PENDING
+
+        |
+        v
+
+PHASE 7 - More Agents
+    PENDING
+
+        |
+        v
+
+PHASE 8 - YouTube Application
+    PENDING
+
+Current Architecture
+Engineer
+   |
+   v
+REST API
+   |
+   v
+Cerebro Service
+   |
+   v
 Domain
- ↓
-Repository Interface
- ↓
-Concrete Adapter
-```
+   |- Job
+   |- Task
+   `- Event
+   |
+   v
+Repository Interfaces
+   |
+   v
+SQLite
 
-## Storage abstraction
+Event delivery:
 
-Cerebro Core must not depend directly on a specific database technology.
+Job Transition
+      |
+      v
+SQLite Transaction
+      |- Job updated
+      `- Event persisted
+              |
+              v
+        EventBroadcaster
+              |
+              v
+        WebSocket Clients
 
-For the current Job domain:
+The important reliability boundary is:
 
-```text
+Persist the event successfully before broadcasting it.
+
+The WebSocket layer is responsible for delivery, not persistence or domain mutation.
+
+Completed Milestones
+Phase 0 - Foundation
+
+COMPLETED / VERIFIED
+
+Established:
+
+Python backend
+FastAPI
+Frontend foundation
+Docker / Docker Compose
+API boundary
+Health endpoints
+Workspace
+Initial project documentation
+Phase 1A - Job Lifecycle
+
+COMPLETED / VERIFIED
+
+Established:
+
+Job domain model
+Job states
+Controlled state transitions
+Job service
+Repository abstraction
+SQLite persistence
+Job REST API
+Optimistic versioning
+Lifecycle tests
+Runtime verification
+
+The lifecycle is controlled by explicit transition policy.
+
+Human approval remains outside the generic transition endpoint and belongs to Phase 2.
+
+Phase 1B - Tasks
+
+COMPLETED / VERIFIED
+
+Established:
+
+Task domain model
+Task states
+Controlled Task transitions
+Task service
+Repository abstraction
+SQLite persistence
+Task ordering
+Optimistic versioning
+Task REST API
+Job relationship validation
+Runtime verification
+
+Tasks remain independently controlled and do not automatically mutate their parent Job.
+
+Phase 1C-A - Event Domain Model + Persistence
+
+COMPLETED / VERIFIED
+
+Established:
+
+Immutable Event model
+Event types
+Event repository abstraction
+SQLite Event persistence
+JSON payload serialization
+Deterministic ordering
+Job / Task filtering
+Duplicate-ID protection
+Phase 1C-B - Transaction Infrastructure
+
+COMPLETED / VERIFIED
+
+Established:
+
+SqliteTransaction
+Explicit transaction boundaries
+Commit on success
+Rollback on failure
+Guaranteed connection cleanup
+Atomic Job + Event persistence
+Phase 1C-C - WebSocket Event Stream
+
+COMPLETED / VERIFIED
+
+C-1 - Connection Manager
+
+Implemented:
+
+WebSocket connection registration
+Disconnect handling
+Broadcast support
+Failed-client isolation
+Automatic failed-connection removal
+C-2 - WebSocket Endpoint
+
+Implemented:
+
+/ws/events
+WebSocket connection acceptance
+Connection registration
+Clean disconnect handling
+Broadcaster integration
+C-3 - Event -> Broadcaster Integration
+
+Implemented:
+
+Job transition event generation
+Atomic Job + Event persistence
+Event broadcasting after successful persistence
+WebSocket delivery of persisted events
+
+Verified with:
+
+Automated WebSocket tests
+Full test suite
+Docker runtime
+Live external WebSocket client
+Live Job state transition
+
+The verified live path is:
+
+POST /api/jobs/{job_id}/transition
+        |
+        v
 JobService
-    ↓
-JobRepository Protocol
-    ↓
-SqliteJobRepository
-```
+        |
+        v
+SQLite transaction
+   |- Job transition
+   `- Event persistence
+        |
+        v
+EventBroadcaster
+        |
+        v
+External WebSocket client
+Current Implementation Status
 
-SQLite is an implementation detail that can later be replaced by another repository adapter.
+The backend currently supports the foundational Job, Task, Event, transaction, and WebSocket lifecycle required for the next stage of Cerebro Core development.
 
-## Controlled state transitions
+The current implementation is intentionally controlled and deterministic.
 
-Jobs cannot arbitrarily change state.
+It does not yet implement:
 
-All transitions pass through the domain transition policy.
+Human approval gates
+Tool execution
+Project understanding
+Autonomous engineering execution
+Planning / Decision Trace domain
+Memory / Experience systems
+Multi-agent orchestration
+YouTube automation
 
-## Phase boundaries
+Those belong to later CroadMap phases.
 
-Phase 1A establishes the persistent Job lifecycle.
+Reliability Principles
 
-Phase 2 owns human approval and execution authorization.
+Current implementation follows these principles:
 
-Later phases own tools, agents, debugging, memory, and applications.
-
----
-
-# Phase 1C-A — Event Domain Model + Event Persistence
-
-**Status: COMPLETED / VERIFIED**
-
-Implemented:
-
-- Event model
-- Event types
-- Immutable event records
-- EventRepository
-- SQLite persistence
-- JSON payload serialization
-- Deterministic ordering
-- Job/Task filtering
-- Duplicate-ID protection
-- 10 Event tests
-- Full suite: **24 passed, 2 warnings**
-
-Phase 1C-A deliberately does not perform automatic event emission.
-
-There is no WebSocket integration yet.
-
-The Event domain remains an independent domain/persistence layer and
-has not been connected to the existing Job or Task lifecycle.
-
-The next milestone is: **Phase 1C-B — Lifecycle Event Emission**.
+Domain state transitions are explicit and validated.
+Persistence is separated from API transport.
+Job + Event persistence is atomic.
+Events are persisted before broadcast.
+WebSocket delivery does not own domain state.
+Failed WebSocket clients are isolated and removed.
+Optimistic versioning protects against concurrent Job / Task updates.
+Human authority remains outside autonomous execution.
+Runtime behavior is verified through automated and live tests.
+Each completed milestone is checkpointed before proceeding.
 
 ---
 
-# Phase 1C-B-A — SQLite Transaction Infrastructure
+# Next Development Target
 
-**Status: COMPLETED / VERIFIED**
+**Phase 1C-D - Plans & Decision Traces**
 
-Implemented:
+The next milestone should establish the domain structures required for Cerebro to represent:
 
-- Added `backend/cerebro/core/sqlite.py`
-- Added `SqliteTransaction` context manager
-- Explicit SQLite `BEGIN`
-- Successful operations `COMMIT`
-- Exceptions `ROLLBACK`
-- Connection cleanup guaranteed
-- Reusable without Job/Task/Event domain coupling
+- Plans
+- Decisions
+- Alternatives
+- Selected strategies
+- Reasoning/decision trace metadata
+- Relationships between Jobs, Plans, Tasks, and Events
 
-## Tests
-
-- Added `tests/test_sqlite.py`
-- 4 transaction tests passed
-- Full suite: **28 passed, 2 warnings**
-- `git diff --check`: clean
-
-## Verification
-
-- Successful transaction persists writes
-- Multiple writes commit atomically
-- Exception rolls back writes
-- Failed later write rolls back earlier writes
-- Existing Phase 1A, 1B, and 1C-A behavior remains passing
-
-## Known Issues
-
-- 2 existing dependency deprecation warnings from Starlette/httpx and AnyIO
-- No known transaction-infrastructure failures
-
-The next milestone is: **Phase 1C-C — WebSocket Event Stream**.
+Implementation should preserve the same reliability principles established during Phase 1C.
 
 ---
 
-# Phase 1C-C-1 — WebSocket Connection Manager
+# Development Rule
 
-**Status: COMPLETED / VERIFIED**
+`current-state.md` is a milestone checkpoint, not a running diary.
 
-Implemented:
+Update this document when a meaningful development milestone is completed and verified.
 
-- Added EventBroadcaster.
-- Added connection registration.
-- Added connection removal.
-- Added broadcast support.
-- Failed WebSocket connections are removed automatically.
-- A failed connection does not prevent other connections from receiving broadcasts.
-- Broadcaster uses an in-memory connection set.
-- Broadcaster has no persistence responsibilities.
-- Broadcaster is independent of FastAPI through a WebSocketConnection protocol.
-
-## Tests
-
-- Added `tests/test_broadcaster.py`.
-- Focused tests: 6 passed.
-- Full test suite: 43 passed, 2 existing dependency deprecation warnings.
-
-## Verification
-
-- Single-client broadcast verified.
-- Multi-client broadcast verified.
-- Disconnect behavior verified.
-- Failed-client isolation verified.
-- Failed connections are removed from the broadcaster.
-- No regression in existing Job, Task, Event, and transaction functionality.
-
-## Not implemented yet
-
-- WebSocket FastAPI endpoint integration.
-- Event-to-broadcaster integration.
-- Frontend event consumption.
-- Live end-to-end WebSocket verification.
-
----
-
-# Phase 1C-C-2 — WebSocket Endpoint
-
-**Status: COMPLETED / VERIFIED**
-
-Implemented:
-
-- Integrated the `/ws/events` FastAPI WebSocket endpoint with `EventBroadcaster`.
-- Added application-level broadcaster initialization through `app.state.event_broadcaster`.
-- WebSocket connections are accepted and registered with the broadcaster.
-- Connections remain open while the client is connected.
-- Client disconnects are handled through `WebSocketDisconnect`.
-- Disconnected clients are removed from the broadcaster.
-- The previous placeholder behavior that immediately closed the WebSocket connection was removed.
-- No event persistence or Job/Task mutation occurs in the WebSocket endpoint.
-- Event-to-broadcaster publishing is intentionally deferred to Phase 1C-C-3.
-
-## Tests
-
-- Added `tests/test_websocket.py`.
-- WebSocket connection/lifecycle tests: 2 passed.
-- Full test suite: 45 passed.
-- 2 existing dependency deprecation warnings remain from Starlette/AnyIO.
-
-## Verification
-
-- `/ws/events` accepts a WebSocket connection.
-- Connection remains open after connection establishment.
-- Client can communicate while connected.
-- Client disconnect is handled cleanly.
-- Broadcaster registration occurs on connection.
-- Broadcaster cleanup occurs on disconnect.
-- Existing Job, Task, Event, transaction, and broadcaster tests continue to pass.
-
-## Not implemented yet
-
-- Event-to-broadcaster integration.
-- Broadcasting persisted Job lifecycle events.
-- Frontend live event consumption.
-- Live end-to-end lifecycle event verification.
-
-# Git State
-
-Current branch:
-
-```text
-main
-```
-
-Previous development checkpoints:
-
-```text
-5f02cf517b003866b9b262cade5eedbd35958a16
-```
-
-Commit message:
-
-```text
-docs: establish development state checkpoint
-```
-
-Phase 1A checkpoint:
-
-```text
-4fc25e8
-```
-
-Commit message:
-
-```text
-feat: implement Phase 1A job lifecycle
-```
-
-Phase 1B implementation and verification are now ready to be
-committed as the next coherent development checkpoint.
-
-The repository is intentionally not being pushed to origin at this
-checkpoint.
-
-# Current Milestone Result
-
-Phase 1B has achieved its intended purpose:
-
-> Cerebro now has a persistent Task domain associated with Jobs, a controlled Task lifecycle, a service layer, a storage abstraction, SQLite persistence, optimistic versioning, a verified REST API, and verified runtime behavior across application restarts.
-
-The Task lifecycle is implemented, persisted, tested, and verified
-through the real application.
-
-Phase 1A remains complete and provides the persistent Job lifecycle
-that the Task domain belongs to.
+Do not continuously append historical implementation details.

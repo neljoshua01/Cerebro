@@ -65,12 +65,30 @@ def get_job(job_id: str, request: Request) -> Job:
 
 
 @router.post("/{job_id}/transition", response_model=JobResponse)
-def transition_job(job_id: str, payload: TransitionJobRequest, request: Request) -> Job:
+async def transition_job(
+    job_id: str,
+    payload: TransitionJobRequest,
+    request: Request,
+) -> Job:
     try:
-        return _service(request).transition_job(job_id=job_id, target=payload.target_state)
+        transitioned, event = _service(request).transition_job_with_event(
+            job_id=job_id,
+            target=payload.target_state,
+        )
+        await request.app.state.event_broadcaster.broadcast(event.to_dict())
+        return transitioned
     except JobNotFoundError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
     except InvalidJobTransitionError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(error)) from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(error),
+        ) from error
     except JobConcurrencyError as error:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Job changed concurrently; retrieve it and retry.") from error
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Job changed concurrently; retrieve it and retry.",
+        ) from error
